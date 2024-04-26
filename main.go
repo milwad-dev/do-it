@@ -1,8 +1,8 @@
 package main
 
 import (
+	"do-it/internal/routers"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -20,14 +20,11 @@ func main() {
 	port := fmt.Sprintf(":%v", os.Getenv("APP_PORT"))
 
 	// Router
-	router := chi.NewRouter()
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("milwad"))
-	})
+	r := routers.GetRouter()
 
 	// Serve application
 	fmt.Printf("Your application run on %v", port)
-	err = http.ListenAndServe(port, router)
+	err = http.ListenAndServe(port, r)
 	if err != nil {
 		log.Fatal(err)
 	}
