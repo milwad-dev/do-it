@@ -5,6 +5,7 @@ import (
 	"do-it/internal/handlers"
 	"do-it/internal/routers"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
