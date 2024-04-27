@@ -46,7 +46,7 @@ func connectDB(err error) *sql.DB {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
-	dbName := os.Getenv("DB_USERNAME")
+	dbName := os.Getenv("DB_DATABASE")
 
 	dns := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbUser, dbPassword, dbHost, dbPort, dbName)
 
