@@ -23,10 +23,9 @@ func main() {
 	port := fmt.Sprintf(":%v", os.Getenv("APP_PORT"))
 
 	// Connect to db and set it
-	db, err := sql.Open("mysql", "")
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := connectDB(err)
+
+	defer db.Close()
 
 	handler := handlers.NewDBHandler(db)
 
@@ -39,4 +38,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// connectDB => connect to DB
+func connectDB(err error) *sql.DB {
+	dbUser := os.Getenv("DB_USERNAME")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_USERNAME")
+
+	dns := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	db, err := sql.Open("mysql", dns)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return db
 }
