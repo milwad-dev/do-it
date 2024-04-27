@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"do-it/internal/models"
-	"do-it/internal/utils"
+	"github.com/milwad-dev/do-it/internal/models"
+	"github.com/milwad-dev/do-it/internal/utils"
 	"log"
 	"net/http"
 )

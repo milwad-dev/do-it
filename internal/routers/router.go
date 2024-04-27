@@ -1,8 +1,8 @@
 package routers
 
 import (
-	"do-it/internal/handlers"
 	"github.com/go-chi/chi/v5"
+	"github.com/milwad-dev/do-it/internal/handlers"
 )
 
 func GetRouter(handler *handlers.DBHandler) *chi.Mux {

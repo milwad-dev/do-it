@@ -2,11 +2,11 @@ package main
 
 import (
 	"database/sql"
-	"do-it/internal/handlers"
-	"do-it/internal/routers"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	"github.com/milwad-dev/do-it/internal/handlers"
+	"github.com/milwad-dev/do-it/internal/routers"
 	"log"
 	"net/http"
 	"os"
