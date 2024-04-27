@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"do-it/internal/handlers"
 	"do-it/internal/routers"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -19,8 +21,16 @@ func main() {
 	// Port
 	port := fmt.Sprintf(":%v", os.Getenv("APP_PORT"))
 
+	// Connect to db and set it
+	db, err := sql.Open("mysql", "")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	handler := handlers.NewDBHandler(db)
+
 	// Router
-	r := routers.GetRouter()
+	r := routers.GetRouter(handler)
 
 	// Serve application
 	fmt.Printf("Your application run on %v \n", port)
