@@ -27,6 +27,10 @@ func main() {
 
 	defer db.Close()
 
+	// Run tables
+	runTables(db)
+
+	// Set and get handler
 	handler := handlers.NewDBHandler(db)
 
 	// Router
@@ -56,4 +60,24 @@ func connectDB(err error) *sql.DB {
 	}
 
 	return db
+}
+
+func runTables(db *sql.DB) {
+	tables := make(map[string]string)
+
+	tables["users"] = `CREATE TABLE IF NOT EXISTS users (
+    	id INT NOT NULL AUTO_INCREMENT UNIQUE,
+    	name VARCHAR(255) NOT NULL,
+    	email VARCHAR(255) NULL UNIQUE,
+    	phone VARCHAR(255) NULL UNIQUE,
+    	password VARCHAR(255) NULL,
+    	email_verified_at TIMESTAMP NULL DEFAULT NULL,
+    	phone_verified_at TIMESTAMP NULL DEFAULT NULL,
+    	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	)`
+
+	for _, table := range tables {
+		db.Exec(table)
+	}
 }
