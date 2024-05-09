@@ -88,6 +88,21 @@ func runTables(db *sql.DB) {
 		FOREIGN KEY (user_id) REFERENCES users(id)
 	)`
 
+	tables["tasks"] = `CREATE TABLE IF NOT EXISTS tasks (
+		id INT NOT NULL AUTO_INCREMENT UNIQUE,
+    	title VARCHAR(255) NOT NULL,
+    	description LONGTEXT NOT NULL,
+    	status VARCHAR(255) NOT NULL,
+    	label_id INT NOT NULL,
+    	user_id INT NOT NULL,
+    	completed_at TIMESTAMP NULL,
+    	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+		FOREIGN KEY (user_id) REFERENCES users(id),
+		FOREIGN KEY (label_id) REFERENCES labels(id)
+    )`
+
 	for _, table := range tables {
 		db.Exec(table)
 	}
