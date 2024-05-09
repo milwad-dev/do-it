@@ -77,6 +77,16 @@ func runTables(db *sql.DB) {
     	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
 
+	tables["labels"] = `CREATE TABLE IF NOT EXISTS labels (
+    	id INT NOT NULL AUTO_INCREMENT UNIQUE,
+    	title VARCHAR(255) NOT NULL,
+    	user_id INT NOT NULL,
+    	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	)`
+
 	for _, table := range tables {
 		db.Exec(table)
 	}
