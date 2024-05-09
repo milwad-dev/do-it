@@ -1,0 +1,8 @@
+### Store label
+POST http://localhost:8000/labels
+Content-Type: application/json
+
+{
+  "title": "My Favorites",
+  "color": "#ccc"
+}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
 )
@@ -10,14 +11,14 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
 
-	// Get data from request
-	title := r.Form.Get("title")
-	color := r.Form.Get("color")
+	// Read request body
+	var label *models.Label
+	utils.ReadRequestBody(w, r, label)
 	userId := 1 // TODO FIX THIS
 
 	// Exec query (id, created_at and updated_at filled automatically)
 	query := "INSERT INTO labels (title, color, user_id) VALUES (?, ?, ?)"
-	_, err := db.Exec(query, title, color, userId)
+	_, err := db.Exec(query, &label.Title, &label.Color, userId)
 	if err != nil {
 		panic(err)
 	}
