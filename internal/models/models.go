@@ -13,3 +13,14 @@ type User struct {
 	CreatedAt       string    `json:"created_at"`
 	UpdatedAt       string    `json:"updated_at"`
 }
+
+type Label struct {
+	ID        int    `json:"id"`
+	Title     string `json:"title"`
+	Color     string `json:"color"`
+	UserId    int    `json:"user_id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+
+	User `json:"user"`
+}
