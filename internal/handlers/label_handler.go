@@ -10,7 +10,7 @@ import (
 func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
-
+	// TODO: ADD VALIDATION
 	// Read request body
 	var label *models.Label
 	utils.ReadRequestBody(w, r, label)
