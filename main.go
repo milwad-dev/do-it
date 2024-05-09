@@ -80,6 +80,7 @@ func runTables(db *sql.DB) {
 	tables["labels"] = `CREATE TABLE IF NOT EXISTS labels (
     	id INT NOT NULL AUTO_INCREMENT UNIQUE,
     	title VARCHAR(255) NOT NULL,
+    	color VARCHAR(255) NOT NULL,
     	user_id INT NOT NULL,
     	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
