@@ -14,7 +14,7 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 	// Labels
 	router.Post("/labels", handler.StoreLabel)
 
-	// TODOS
+	// Tasks
 	router.Get("/tasks", handler.GetLatestTasks)
 
 	return router
