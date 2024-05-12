@@ -27,5 +27,5 @@ func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, user)
 	}
 
-	utils.JsonResponse(w, users)
+	utils.JsonResponse(w, users, 200)
 }

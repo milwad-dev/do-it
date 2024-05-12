@@ -26,5 +26,5 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]string)
 	data["message"] = "The label store successfully."
 
-	utils.JsonResponse(w, data)
+	utils.JsonResponse(w, data, 200)
 }
