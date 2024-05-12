@@ -18,7 +18,7 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for rows.Next() {
-		
+
 	}
 
 	utils.JsonResponse(w, data)
