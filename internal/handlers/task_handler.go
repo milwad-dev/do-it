@@ -56,7 +56,7 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 			&user.Name,
 			&user.Email,
 			&user.CreatedAt,
-		)
+		) // TODO: Fix problem for load user
 
 		task.User = user
 
