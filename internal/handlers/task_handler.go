@@ -68,3 +68,29 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 
 	utils.JsonResponse(w, data, 200)
 }
+
+func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
+	// Parse request body
+	r.ParseForm()
+
+	// TODO: ADD validation
+
+	// Read request body
+	var task *models.Task
+	utils.ReadRequestBody(w, r, task)
+
+	userId := 1                       // TODO FIX THIS
+	labelId := r.Form.Get("label_id") // TODO: ADD validation is valid id or not
+
+	// Exec query (id, created_at and updated_at filled automatically)
+	query := "INSERT INTO tasks (title, description, status, label_id, user_id) VALUES (?, ?, ?, ?, ?)"
+	_, err := db.Exec(query, &task.Title, &task.Description, &task.Status, labelId, userId)
+	if err != nil {
+		panic(err)
+	}
+
+	data := make(map[string]string)
+	data["message"] = "The task store successfully."
+
+	utils.JsonResponse(w, data, 200)
+}
