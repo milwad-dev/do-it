@@ -8,19 +8,21 @@ import (
 func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 	router := chi.NewRouter()
 
-	// Users
-	router.Get("/users", handler.GetLatestUsers)
+	router.Route("/api", func(r chi.Router) {
+		// Users
+		r.Get("/users", handler.GetLatestUsers)
 
-	// Labels
-	router.Post("/labels", handler.StoreLabel)
+		// Labels
+		r.Post("/labels", handler.StoreLabel)
 
-	// Tasks
-	router.Get("/tasks", handler.GetLatestTasks)
-	router.Post("/tasks", handler.StoreTask)
+		// Tasks
+		r.Get("/tasks", handler.GetLatestTasks)
+		r.Post("/tasks", handler.StoreTask)
 
-	// Auth
-	router.Post("/register", handler.RegisterAuth)
-	router.Post("/login", handler.LoginAuth)
+		// Auth
+		r.Post("/register", handler.RegisterAuth)
+		r.Post("/login", handler.LoginAuth)
+	})
 
 	return router
 }
