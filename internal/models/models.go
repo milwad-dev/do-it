@@ -1,13 +1,15 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
-	ID              int       `json:"id"`
-	Name            string    `json:"name"`
-	Email           string    `json:"email"`
-	Phone           string    `json:"phone"`
-	Password        string    `json:"-"`
+	ID              int       `json:"id" validate:"required"`
+	Name            string    `json:"name" validate:"required,min=3,max=250"`
+	Email           string    `json:"email" validate:"required,email,min=3,max=250"`
+	Phone           string    `json:"phone" validate:"required,len=11,unique"`
+	Password        string    `json:"-" validate:"required,min=8,max=250"`
 	EmailVerifiedAt time.Time `json:"emailVerified_at,omitempty"`
 	PhoneVerifiedAt time.Time `json:"phoneVerified_at,omitempty"`
 	CreatedAt       string    `json:"created_at"`
