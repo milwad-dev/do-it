@@ -1,6 +1,6 @@
 # Do It
 
-A todo app written with Go
+Do-It is a to-do application built with Golang and a REST API. It offers a fast and scalable solution for task management, enabling users to easily add, update, and delete tasks. The app uses Golang’s robust performance alongside a well-structured REST API to provide a seamless and efficient experience for managing daily tasks.
 
 
 ## Swagger API Documentation
