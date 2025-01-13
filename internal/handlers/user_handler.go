@@ -8,6 +8,11 @@ import (
 )
 
 // GetLatestUsers => get the latest users and return json response
+// @Summary Get Users
+// @Description Get the latest users
+// @Produce json
+// @Success 200 {object} []models.User
+// @Router /api/users [get]
 func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 	var users []models.User
 
