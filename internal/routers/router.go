@@ -37,11 +37,9 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 		})
 	})
 
-	router.Route("/api", func(r chi.Router) {
-		// Auth
-		r.Post("/register", handler.RegisterAuth)
-		r.Post("/login", handler.LoginAuth)
-	})
+	// Auth
+	router.Post("/api/register", handler.RegisterAuth)
+	router.Post("/api/login", handler.LoginAuth)
 
 	return router
 }
