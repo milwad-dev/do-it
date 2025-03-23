@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/milwad-dev/do-it/docs"
 	"github.com/milwad-dev/do-it/internal/handlers"
+	"github.com/milwad-dev/do-it/internal/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"net/http"
 )
@@ -12,6 +13,8 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Route("/api", func(r chi.Router) {
+		r.Use(middleware.Authenticate)
+
 		// Users
 		r.Get("/users", handler.GetLatestUsers)
 
