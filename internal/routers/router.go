@@ -26,20 +26,20 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 		r.Get("/tasks", handler.GetLatestTasks)
 		r.Post("/tasks", handler.StoreTask)
 		r.Patch("/tasks/{task}/mark-as-completed", handler.MarkTaskAsCompleted)
-
-		// Swagger
-		r.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL("http://localhost:8000/api/debug/swagger"), // The URL pointing to API definition
-		))
-		r.Get("/debug/swagger", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(docs.SwaggerInfo.SwaggerTemplate))
-		})
 	})
 
 	// Auth
 	router.Post("/api/register", handler.RegisterAuth)
 	router.Post("/api/login", handler.LoginAuth)
+
+	// Swagger
+	router.Get("/api/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8000/api/debug/swagger"), // The URL pointing to API definition
+	))
+	router.Get("/api/debug/swagger", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(docs.SwaggerInfo.SwaggerTemplate))
+	})
 
 	return router
 }
