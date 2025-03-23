@@ -16,7 +16,7 @@ import (
 func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 	var users []models.User
 
-	sql := "SELECT id, name, email, phone, created_at FROM USERS ORDER BY created_at DESC"
+	sql := "SELECT id, name, COALESCE(email, ''), COALESCE(phone, ''), created_at FROM USERS ORDER BY created_at DESC"
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Fatal(err)
@@ -32,5 +32,6 @@ func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, user)
 	}
 
+	// TODO: Fix the format of json
 	utils.JsonResponse(w, users, 200)
 }
