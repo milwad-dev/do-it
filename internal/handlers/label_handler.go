@@ -7,6 +7,12 @@ import (
 	"net/http"
 )
 
+// GetLatestLabels => Get the latest labels and return json response
+// @Summary Get Labels
+// @Description Get the latest labels
+// @Produce json
+// @Success 200 {object} []models.Label
+// @Router /api/labels [get]
 func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 	var labels []models.Label
 
@@ -42,6 +48,14 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 }
 
 // StoreLabel => store new label and return json response
+// @Summary Store Label
+// @Description store new label
+// @Produce json
+// @Param title body string true "The title of the label"
+// @Param color body string true "The color of the label"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/labels [post]
 func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
