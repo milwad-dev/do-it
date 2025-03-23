@@ -7,43 +7,56 @@ import (
 	"net/http"
 )
 
+// GetLatestTasks => Get the latest tasks and return json response
 func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
+	// SQL query to join tasks and users
 	query := `SELECT 
-    	tasks.id,
-    	tasks.title,
-    	tasks.description, 
-    	tasks.status, 
-    	tasks.user_id, 
-    	tasks.label_id, 
-    	tasks.completed_at,
-    	tasks.created_at,
-    	
-    	users.id, 
-    	users.name,
-    	users.email,
-    	users.created_at
-		FROM tasks
-		INNER JOIN users ON tasks.user_id = users.id 
-	`
+	   	tasks.id AS task_id,
+		tasks.title AS task_title,
+		tasks.description AS task_description, 
+		tasks.status AS task_status, 
+		tasks.user_id, 
+		tasks.label_id, 
+		COALESCE(tasks.completed_at, '') AS task_completed_at,
+		tasks.created_at AS task_created_at,
+		
+		users.id AS user_id, 
+		users.name AS user_name,
+		COALESCE(users.email, '') AS user_email,
+		COALESCE(users.phone, '') AS user_phone,
+		users.created_at AS user_created_at,
+	
+		labels.id AS label_id,
+		labels.title AS label_title,
+		labels.color AS label_color,
+		labels.created_at AS label_created_at
+	FROM tasks
+	JOIN users ON tasks.user_id = users.id
+	JOIN labels ON tasks.label_id = labels.id`
+
+	// Execute the query
 	rows, err := db.Query(query)
 	if err != nil {
 		data["message"] = err.Error()
 		data["status"] = "error"
-
 		utils.JsonResponse(w, data, http.StatusInternalServerError)
-
 		return
 	}
+	defer rows.Close()
 
+	// Slice to store tasks
 	var tasks []models.Task
 
+	// Iterate over the rows
 	for rows.Next() {
 		var task models.Task
 		var user models.User
+		var label models.Label
 
-		rows.Scan(
+		// Scan the task and user fields from the query result
+		err := rows.Scan(
 			&task.ID,
 			&task.Title,
 			&task.Description,
@@ -53,23 +66,55 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 			&task.CompletedAt,
 			&task.CreatedAt,
 
+			// Scan user fields
 			&user.ID,
 			&user.Name,
 			&user.Email,
+			&user.Phone,
 			&user.CreatedAt,
-		) // TODO: Fix problem for load user
 
+			// Scan label fields
+			&label.ID,
+			&label.Title,
+			&label.Color,
+			&label.CreatedAt,
+		)
+
+		// Check for any errors in scanning
+		if err != nil {
+			data["message"] = "Error scanning row: " + err.Error()
+			data["status"] = "error"
+			utils.JsonResponse(w, data, http.StatusInternalServerError)
+			return
+		}
+
+		// Attach the user to the task
 		task.User = user
 
+		// Attach the label to the task
+		task.Label = label
+
+		// Append the task to the tasks slice
 		tasks = append(tasks, task)
 	}
 
+	// Check for any row iteration errors
+	if err := rows.Err(); err != nil {
+		data["message"] = "Error iterating rows: " + err.Error()
+		data["status"] = "error"
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
+	}
+
+	// Add tasks data to response
 	data["data"] = tasks
 	data["status"] = "success"
 
-	utils.JsonResponse(w, data, 200)
+	// Respond with the tasks data as JSON
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
+// StoreTask => Store new task and return json response
 func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
