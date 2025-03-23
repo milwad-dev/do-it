@@ -1,4 +1,44 @@
 definitions:
+  models.Label:
+    properties:
+      color:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.Task:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      label:
+        $ref: '#/definitions/models.Label'
+      label_id:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: integer
+    type: object
   models.User:
     properties:
       created_at:
@@ -30,6 +70,157 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/labels:
+    get:
+      description: Get the latest labels
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Label'
+            type: array
+      summary: Get Labels
+    post:
+      description: store new label
+      parameters:
+      - description: The title of the label
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: The color of the label
+        in: body
+        name: color
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Store Label
+  /api/register:
+    post:
+      description: Check user credentials and login
+      parameters:
+      - description: The email or phone of the user
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: The password of the user
+        in: body
+        name: password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+  /api/tasks:
+    get:
+      description: Get the latest tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+      summary: Get Tasks
+    post:
+      description: store new task
+      parameters:
+      - description: The title of the task
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: The description of the task
+        in: body
+        name: description
+        required: true
+        schema:
+          type: string
+      - description: The status of the task
+        in: body
+        name: status
+        required: true
+        schema:
+          type: string
+      - description: The label ID of the task
+        in: body
+        name: label_id
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Store Task
+  /api/tasks/{id}/mark-as-completed:
+    patch:
+      description: mark task as completed
+      parameters:
+      - description: The ID of the task
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mark Task as Completed
   /api/users:
     get:
       description: Get the latest users
