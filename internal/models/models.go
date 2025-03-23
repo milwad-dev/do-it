@@ -20,7 +20,7 @@ type Label struct {
 	ID        int    `json:"id"`
 	Title     string `json:"title"`
 	Color     string `json:"color"`
-	UserId    int    `json:"user_id"`
+	UserId    int    `json:"-"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 

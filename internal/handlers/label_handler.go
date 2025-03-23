@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
@@ -44,15 +45,24 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
+
 	// TODO: ADD VALIDATION
+
 	// Read request body
-	var label *models.Label
-	utils.ReadRequestBody(w, r, label)
-	userId := 1 // TODO FIX THIS
+	var label models.Label
+
+	userId := 9 // TODO FIX THIS
+
+	// Decode JSON request body into `labels`
+	err := json.NewDecoder(r.Body).Decode(&label)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 
 	// Exec query (id, created_at and updated_at filled automatically)
 	query := "INSERT INTO labels (title, color, user_id) VALUES (?, ?, ?)"
-	_, err := db.Exec(query, &label.Title, &label.Color, userId)
+	_, err = db.Exec(query, &label.Title, &label.Color, userId)
 	if err != nil {
 		panic(err)
 	}
