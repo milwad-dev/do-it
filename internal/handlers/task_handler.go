@@ -10,6 +10,11 @@ import (
 )
 
 // GetLatestTasks => Get the latest tasks and return json response
+// @Summary Get Tasks
+// @Description Get the latest tasks
+// @Produce json
+// @Success 200 {object} []models.Task
+// @Router /api/tasks [get]
 func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
@@ -117,6 +122,16 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 // StoreTask => Store new task and return json response
+// @Summary Store Task
+// @Description store new task
+// @Produce json
+// @Param title body string true "The title of the task"
+// @Param description body string true "The description of the task"
+// @Param status body string true "The status of the task"
+// @Param label_id body string true "The label ID of the task"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/tasks [post]
 func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
@@ -149,8 +164,14 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // MarkTaskAsCompleted => Mark task as completed
+// @Summary Mark Task as Completed
+// @Description mark task as completed
+// @Produce json
+// @Param id query string true "The ID of the task"
+// @Success 200 {object} map[string]string
+// @Router /api/tasks/{id}/mark-as-completed [patch]
 func (db *DBHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
-	taskId := chi.URLParam(r, "task")
+	taskId := chi.URLParam(r, "id")
 
 	sql := "UPDATE tasks SET completed_at = ? WHERE id = ?"
 	res, err := db.Exec(sql, time.Now(), taskId)
