@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
+	"time"
 )
 
 // GetLatestTasks => Get the latest tasks and return json response
@@ -142,6 +144,25 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 
 	data := make(map[string]string)
 	data["message"] = "The task store successfully."
+
+	utils.JsonResponse(w, data, 200)
+}
+
+// MarkTaskAsCompleted => Mark task as completed
+func (db *DBHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
+	taskId := chi.URLParam(r, "task")
+
+	sql := "UPDATE tasks SET completed_at = ? WHERE id = ?"
+	res, err := db.Exec(sql, time.Now(), taskId)
+	if err != nil {
+		panic(err)
+	}
+	if rowsAffected, _ := res.RowsAffected(); rowsAffected == 0 {
+		panic(err)
+	}
+
+	data := make(map[string]string)
+	data["message"] = "The task mark as completed."
 
 	utils.JsonResponse(w, data, 200)
 }

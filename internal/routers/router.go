@@ -22,6 +22,7 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 		// Tasks
 		r.Get("/tasks", handler.GetLatestTasks)
 		r.Post("/tasks", handler.StoreTask)
+		r.Patch("/tasks/{task}/mark-as-completed", handler.MarkTaskAsCompleted)
 
 		// Auth
 		r.Post("/register", handler.RegisterAuth)
