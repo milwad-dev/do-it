@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
@@ -76,15 +77,20 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	// TODO: ADD validation
 
 	// Read request body
-	var task *models.Task
-	utils.ReadRequestBody(w, r, task)
+	var task models.Task
 
-	userId := 1                       // TODO FIX THIS
-	labelId := r.Form.Get("label_id") // TODO: ADD validation is valid id or not
+	userId := 9 // TODO FIX THIS
+
+	// Decode JSON request body into `tasks`
+	err := json.NewDecoder(r.Body).Decode(&task)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 
 	// Exec query (id, created_at and updated_at filled automatically)
 	query := "INSERT INTO tasks (title, description, status, label_id, user_id) VALUES (?, ?, ?, ?, ?)"
-	_, err := db.Exec(query, &task.Title, &task.Description, &task.Status, labelId, userId)
+	_, err = db.Exec(query, &task.Title, &task.Description, &task.Status, &task.LabelId, userId)
 	if err != nil {
 		panic(err)
 	}
