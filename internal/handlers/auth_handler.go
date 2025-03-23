@@ -8,18 +8,19 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"regexp"
 )
 
-type user struct {
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
+// RegisterAuth => Register user and create token
 func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
-	var user user
+	var user struct {
+		Name     string `json:"name"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
 
 	data := make(map[string]any)
+
 	// Parse body
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -85,51 +86,82 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Return success response
 	data["message"] = "Register completed."
+	data["token"] = token
+
+	utils.JsonResponse(w, data, 200)
+	// TODO: Fix register
+}
+
+// LoginAuth => Check user credentials and create jwt token
+func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
+	user := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+	data := make(map[string]any)
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Detect username type (email or phone)
+	usernameField := detectEmailOrPhone(user.Username)
+
+	// Get user info from database
+	query := fmt.Sprintf("SELECT id, password FROM users WHERE %s = ?", usernameField)
+	row := db.QueryRow(query, user.Username)
+
+	var userID int
+	var storedPassword string
+
+	err = row.Scan(&userID, &storedPassword)
+	if err != nil {
+		data["message"] = "Invalid username or password"
+		utils.JsonResponse(w, data, 401)
+		return
+	}
+
+	// Compare stored password hash with provided password
+	if !services.CheckPasswordHash(user.Password, storedPassword) {
+		data["message"] = "Invalid username or password"
+		utils.JsonResponse(w, data, 401)
+		return
+	}
+
+	// Generate JWT token
+	token, errToken := services.GenerateToken(uint(userID))
+	if errToken != nil {
+		data["message"] = "Problem generating token."
+		utils.JsonResponse(w, data, 500)
+		return
+	}
+
+	// Return success response
+	data["message"] = "Login successful."
 	data["token"] = token
 
 	utils.JsonResponse(w, data, 200)
 }
 
-func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
-	//name := r.Form.Get("name")
-	//username := r.Form.Get("username") // Email or Phone
-	//password := r.Form.Get("password")
-	//
-	//usernameField := detectEmailOrPhone(username)
-	//
-	//rows, err := db.Query("SELECT count(*) FROM users WHERE ? = ?", usernameField, username)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//defer rows.Close()
-	//
-	//var count int
-	//
-	//for rows.Next() {
-	//	if err := rows.Scan(&count); err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}
-	//if count == 0 {
-	//	data := map[string]any{
-	//		"message": "The user not found",
-	//	}
-	//	utils.JsonResponse(w, data, 302)
-	//}
-	//
-	//data := map[string]any{
-	//	"message": "Register completed",
-	//}
-	//utils.JsonResponse(w, data, 302)
-}
-
-// detectEmailOrPhone => Detect the username is email or phone
+// detectEmailOrPhone => Detects whether the username is an email or phone
 func detectEmailOrPhone(username string) string {
 	_, err := mail.ParseAddress(username)
-	if err != nil {
+	if err == nil {
+		return "email"
+	}
+
+	// Check if it's a valid phone number (assuming 10+ digits)
+	phoneRegex := regexp.MustCompile(`^\d{10,}$`)
+	if phoneRegex.MatchString(username) {
 		return "phone"
 	}
 
-	return "email"
+	// Default to phone if unsure
+	return "phone"
 }
