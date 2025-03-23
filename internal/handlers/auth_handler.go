@@ -12,6 +12,15 @@ import (
 )
 
 // RegisterAuth => Register user and create token
+// @Summary Register user
+// @Description Create new user with token
+// @Produce json
+// @Param name body string true "The name of the user"
+// @Param username body string true "The email or phone of the user"
+// @Param password body string true "The password of the user"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/register [post]
 func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
 		Name     string `json:"name"`
@@ -95,6 +104,14 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 }
 
 // LoginAuth => Check user credentials and create jwt token
+// @Summary Login user
+// @Description Check user credentials and login
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Param password body string true "The password of the user"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/register [post]
 func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	user := struct {
 		Username string `json:"username"`
