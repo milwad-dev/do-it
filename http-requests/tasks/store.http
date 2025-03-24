@@ -1,0 +1,11 @@
+### Store task
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Complete Do-It",
+  "description": "Complete all my Golang projects on my GitHub",
+  "status": "active",
+  "label_id": 7
+}
