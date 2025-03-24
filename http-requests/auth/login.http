@@ -1,0 +1,8 @@
+### Register new user
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "milwad@gmail.com",
+  "password": "Milwad123!"
+}
