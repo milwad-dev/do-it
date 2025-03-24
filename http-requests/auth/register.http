@@ -1,6 +1,5 @@
 ### Register new user
-# @name=Register
-POST {{baseUrl}}/api/register HTTP/1.1
+POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
