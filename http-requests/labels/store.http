@@ -1,6 +1,7 @@
 ### Store label
-POST http://localhost:8000/labels
+POST {{baseUrl}}/labels
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "title": "My Favorites",

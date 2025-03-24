@@ -1,0 +1,4 @@
+### Store task
+PATCH {{baseUrl}}/tasks/9/mark-as-completed
+Content-Type: application/json
+Authorization: Bearer {{token}}

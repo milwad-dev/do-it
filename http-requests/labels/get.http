@@ -1,0 +1,4 @@
+### Get latest labels
+GET {{baseUrl}}/labels
+Content-Type: application/json
+Authorization: Bearer {{token}}

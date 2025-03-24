@@ -1,0 +1,4 @@
+### Get latest tasks
+GET {{baseUrl}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
