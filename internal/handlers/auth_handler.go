@@ -85,7 +85,6 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create token
-	fmt.Println(name, username, password, usernameField, count)
 	userId, _ := result.LastInsertId()
 	token, errToken := services.GenerateToken(uint(userId))
 	if errToken != nil {
