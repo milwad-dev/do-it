@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
@@ -60,17 +61,30 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
 
-	// TODO: ADD VALIDATION
+	data := make(map[string]string)
 
 	// Read request body
 	var label models.Label
 
-	userId := 9 // TODO FIX THIS
+	// Get user id
+	userId := r.Context().Value("userID")
 
 	// Decode JSON request body into `labels`
 	err := json.NewDecoder(r.Body).Decode(&label)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(label)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
 		return
 	}
 
@@ -81,7 +95,6 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	data := make(map[string]string)
 	data["message"] = "The label store successfully."
 
 	utils.JsonResponse(w, data, 200)

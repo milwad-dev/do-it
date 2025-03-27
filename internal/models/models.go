@@ -18,8 +18,8 @@ type User struct {
 
 type Label struct {
 	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	Color     string `json:"color"`
+	Title     string `json:"title" validate:"required,min=3,max=250"`
+	Color     string `json:"color" validate:"required,min=3,max=250"`
 	UserId    int    `json:"-"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
