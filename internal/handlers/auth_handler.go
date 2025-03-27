@@ -28,6 +28,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
+	// TODO: ADD validation
 	data := make(map[string]any)
 
 	// Parse body
@@ -99,7 +100,6 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	data["token"] = token
 
 	utils.JsonResponse(w, data, 200)
-	// TODO: Fix register
 }
 
 // LoginAuth => Check user credentials and create jwt token
