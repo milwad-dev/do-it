@@ -28,6 +28,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
+	// TODO: ADD validation
 	data := make(map[string]any)
 
 	// Parse body
@@ -99,7 +100,6 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	data["token"] = token
 
 	utils.JsonResponse(w, data, 200)
-	// TODO: Fix register
 }
 
 // LoginAuth => Check user credentials and create jwt token
@@ -110,7 +110,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 // @Param password body string true "The password of the user"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/register [post]
+// @Router /api/login [post]
 func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	user := struct {
 		Username string `json:"username"`
@@ -162,6 +162,164 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	data["message"] = "Login successful."
 	data["token"] = token
 
+	utils.JsonResponse(w, data, 200)
+}
+
+// ForgotPasswordAuth => Send email or sms to user for forgot password
+// @Summary Forgot password
+// @Description Send email or sms to user for forgot password
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/forgot-password [post]
+func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) {
+	var user struct {
+		Username string `json:"username"`
+	}
+
+	data := make(map[string]any)
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Detect username
+	usernameField := detectEmailOrPhone(user.Username)
+
+	// Check user is existing
+	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
+	rows, err := db.Query(queryExist, user.Username)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Check user exists
+	if count == 0 {
+		data["message"] = "The user is not exists."
+
+		utils.JsonResponse(w, data, 302)
+		return
+	}
+
+	// Send email or sms for user
+	if usernameField == "email" {
+		// TODO:
+
+		data["message"] = "Email sent successfully."
+	} else {
+		// send sms
+		// TODO:
+
+		data["message"] = "Sms sent successfully."
+	}
+
+	utils.JsonResponse(w, data, 200)
+}
+
+// ForgotPasswordVerifyAuth => Verify the user with otp
+// @Summary Forgot Password Verify
+// @Description Verify the user with otp
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/forgot-password-verify [post]
+func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Request) {
+	// TODO:
+}
+
+// ResetPasswordAuth => Reset user password
+// @Summary Reset Password
+// @Description Reset user password
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Param new_password body string true "The new password"
+// @Param re_new_password body string true "The retry new password"
+// @Success 200 {object} map[string]string
+// @Failure 302 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/reset-password [post]
+func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
+	var user struct {
+		Username      string `json:"username"`
+		NewPassword   string `json:"new_password"`
+		ReNewPassword string `json:"re_new_password"`
+	}
+
+	data := make(map[string]any)
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Detect username
+	usernameField := detectEmailOrPhone(user.Username)
+
+	// Check user is existing
+	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
+	rows, err := db.Query(queryExist, user.Username)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Check user exists
+	if count == 0 {
+		data["message"] = "The user is not exists."
+
+		utils.JsonResponse(w, data, 302)
+		return
+	}
+
+	// Check `new_password` is exists with `re_new_password`
+	if user.NewPassword != user.ReNewPassword {
+		data["message"] = "The new password is not the same with retry new password."
+
+		utils.JsonResponse(w, data, 302)
+		return
+	}
+
+	// Update user password
+	password, _ := services.HashPassword(user.NewPassword)
+	query := fmt.Sprintf("UPDATE users SET password = ? WHERE %s = ?", usernameField)
+	_, err = db.Exec(query, password, user.Username)
+	if err != nil {
+		data["message"] = "Problem on updating password."
+
+		utils.JsonResponse(w, data, 500)
+		return
+	}
+
+	data["message"] = "Password updated successfully."
 	utils.JsonResponse(w, data, 200)
 }
 
