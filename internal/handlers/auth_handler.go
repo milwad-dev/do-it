@@ -294,9 +294,9 @@ func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Req
 // @Router /api/reset-password [post]
 func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
-		Username      string `json:"username"`
-		NewPassword   string `json:"new_password"`
-		ReNewPassword string `json:"re_new_password"`
+		Username      string `json:"username" validate:"required,min=3,max=250"`
+		NewPassword   string `json:"new_password" validate:"required,min=8,max=250"`
+		ReNewPassword string `json:"re_new_password" validate:"required,min=8,max=250"`
 	}
 
 	data := make(map[string]any)
@@ -307,6 +307,18 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 		data["message"] = err.Error()
 
 		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
 		return
 	}
 
