@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
@@ -136,17 +137,29 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
 
-	// TODO: ADD validation
+	data := make(map[string]string)
 
 	// Read request body
 	var task models.Task
 
-	userId := 9 // TODO FIX THIS
+	userId := r.Context().Value("userID")
 
 	// Decode JSON request body into `tasks`
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(task)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
 		return
 	}
 
@@ -157,7 +170,6 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	data := make(map[string]string)
 	data["message"] = "The task store successfully."
 
 	utils.JsonResponse(w, data, 200)
