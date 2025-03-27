@@ -200,7 +200,7 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 // @Router /api/forgot-password [post]
 func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
-		Username string `json:"username"`
+		Username string `json:"username" validate:"required,min=3,max=250"`
 	}
 
 	data := make(map[string]any)
@@ -211,6 +211,18 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 		data["message"] = err.Error()
 
 		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
 		return
 	}
 
