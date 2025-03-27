@@ -126,8 +126,8 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 // @Router /api/login [post]
 func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	user := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username string `json:"username" validate:"required,min=3,max=250"`
+		Password string `json:"password" validate:"required,min=8,max=250"`
 	}{}
 	data := make(map[string]any)
 
@@ -136,6 +136,18 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
 		return
 	}
 
