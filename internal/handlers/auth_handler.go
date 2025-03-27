@@ -165,6 +165,64 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	utils.JsonResponse(w, data, 200)
 }
 
+func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) {
+	var user struct {
+		Username string `json:"username"`
+	}
+
+	data := make(map[string]any)
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Detect username
+	usernameField := detectEmailOrPhone(user.Username)
+
+	// Check user is existing
+	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
+	rows, err := db.Query(queryExist, user.Username)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Check user exists
+	if count == 0 {
+		data["message"] = "The user is not exists."
+
+		utils.JsonResponse(w, data, 302)
+		return
+	}
+
+	// Send email or sms for user
+	if usernameField == "email" {
+		// TODO:
+
+		data["message"] = "Email sent successfully."
+	} else {
+		// send sms
+		// TODO:
+
+		data["message"] = "Sms sent successfully."
+	}
+
+	utils.JsonResponse(w, data, 200)
+}
+
 // detectEmailOrPhone => Detects whether the username is an email or phone
 func detectEmailOrPhone(username string) string {
 	_, err := mail.ParseAddress(username)
