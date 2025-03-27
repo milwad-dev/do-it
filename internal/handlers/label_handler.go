@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
@@ -96,6 +98,64 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data["message"] = "The label store successfully."
+
+	utils.JsonResponse(w, data, 200)
+}
+
+// DeleteLabel => delete the label by id and return json response
+// @Summary Delete Label
+// @Description delete label by id
+// @Produce json
+// @Param id url integer true "The id of the label"
+// @Success 200 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/labels/{id} [delete]
+func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
+	labelId := chi.URLParam(r, "id")
+	userId := r.Context().Value("userID").(jwt.MapClaims)["user_id"]
+	data := make(map[string]string)
+
+	queryExist := "SELECT count(*) FROM labels WHERE id = ? AND user_id = ?"
+	rows, err := db.Query(queryExist, labelId, userId)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
+		return
+	}
+
+	var count int
+
+	for rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, 422)
+			return
+		}
+	}
+
+	// If the label is not exists, we return error response
+	if count == 0 {
+		data["message"] = "The label is not exists."
+
+		utils.JsonResponse(w, data, 404)
+		return
+	}
+
+	// If label exists, we delete it
+	query := "DELETE FROM labels WHERE id = ? AND user_id = ?"
+	_, err = db.Exec(query, labelId, userId)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
+		return
+	}
+
+	data["message"] = "The label deleted successfully."
 
 	utils.JsonResponse(w, data, 200)
 }

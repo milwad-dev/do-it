@@ -21,6 +21,7 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 		// Labels
 		r.Get("/labels", handler.GetLatestLabels)
 		r.Post("/labels", handler.StoreLabel)
+		r.Delete("/labels/{id}", handler.DeleteLabel)
 
 		// Tasks
 		r.Get("/tasks", handler.GetLatestTasks)
