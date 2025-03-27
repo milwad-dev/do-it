@@ -243,6 +243,86 @@ func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Req
 	// TODO:
 }
 
+// ResetPasswordAuth => Reset user password
+// @Summary Reset Password
+// @Description Reset user password
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Param new_password body string true "The new password"
+// @Param re_new_password body string true "The retry new password"
+// @Success 200 {object} map[string]string
+// @Failure 302 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/reset-password [post]
+func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
+	var user struct {
+		Username      string `json:"username"`
+		NewPassword   string `json:"new_password"`
+		ReNewPassword string `json:"re_new_password"`
+	}
+
+	data := make(map[string]any)
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Detect username
+	usernameField := detectEmailOrPhone(user.Username)
+
+	// Check user is existing
+	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
+	rows, err := db.Query(queryExist, user.Username)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Check user exists
+	if count == 0 {
+		data["message"] = "The user is not exists."
+
+		utils.JsonResponse(w, data, 302)
+		return
+	}
+
+	// Check `new_password` is exists with `re_new_password`
+	if user.NewPassword != user.ReNewPassword {
+		data["message"] = "The new password is not the same with retry new password."
+
+		utils.JsonResponse(w, data, 302)
+		return
+	}
+
+	// Update user password
+	password, _ := services.HashPassword(user.NewPassword)
+	query := fmt.Sprintf("UPDATE users SET password = ? WHERE %s = ?", usernameField)
+	_, err = db.Exec(query, password, user.Username)
+	if err != nil {
+		data["message"] = "Problem on updating password."
+
+		utils.JsonResponse(w, data, 500)
+		return
+	}
+
+	data["message"] = "Password updated successfully."
+	utils.JsonResponse(w, data, 200)
+}
+
 // detectEmailOrPhone => Detects whether the username is an email or phone
 func detectEmailOrPhone(username string) string {
 	_, err := mail.ParseAddress(username)
