@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/services"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"log"
@@ -20,15 +21,15 @@ import (
 // @Param password body string true "The password of the user"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
+// @Failure 422 {object} map[string]string
 // @Router /api/register [post]
 func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
-		Name     string `json:"name"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Name     string `json:"name" validate:"required,min=3,max=250"`
+		Username string `json:"username" validate:"required,min=3,max=250"`
+		Password string `json:"password" validate:"required,min=8,max=250"`
 	}
 
-	// TODO: ADD validation
 	data := make(map[string]any)
 
 	// Parse body
@@ -37,6 +38,18 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 		data["message"] = err.Error()
 
 		utils.JsonResponse(w, data, 400)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 422)
 		return
 	}
 
