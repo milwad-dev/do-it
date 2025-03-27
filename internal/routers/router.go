@@ -32,6 +32,7 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 	router.Post("/api/register", handler.RegisterAuth)
 	router.Post("/api/login", handler.LoginAuth)
 	router.Post("/api/forgot-password", handler.ForgotPasswordAuth)
+	router.Post("/api/forgot-password-verify", handler.ForgotPasswordVerifyAuth)
 
 	// Swagger
 	router.Get("/api/swagger/*", httpSwagger.Handler(

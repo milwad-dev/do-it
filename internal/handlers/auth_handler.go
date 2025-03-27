@@ -110,7 +110,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 // @Param password body string true "The password of the user"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/register [post]
+// @Router /api/login [post]
 func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	user := struct {
 		Username string `json:"username"`
@@ -165,6 +165,14 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	utils.JsonResponse(w, data, 200)
 }
 
+// ForgotPasswordAuth => Send email or sms to user for forgot password
+// @Summary Forgot password
+// @Description Send email or sms to user for forgot password
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/forgot-password [post]
 func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
 		Username string `json:"username"`
@@ -221,6 +229,18 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.JsonResponse(w, data, 200)
+}
+
+// ForgotPasswordVerifyAuth => Verify the user with otp
+// @Summary Forgot Password Verify
+// @Description Verify the user with otp
+// @Produce json
+// @Param username body string true "The email or phone of the user"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Router /api/forgot-password-verify [post]
+func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Request) {
+	// TODO:
 }
 
 // detectEmailOrPhone => Detects whether the username is an email or phone
