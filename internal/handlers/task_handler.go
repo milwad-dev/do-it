@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
@@ -172,6 +173,53 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 
 	data["message"] = "The task store successfully."
 
+	utils.JsonResponse(w, data, 200)
+}
+
+// DeleteTask => Delete task by id
+// @Summary Delete task
+// @Description Delete task by id
+// @Produce json
+// @Param id query string true "The ID of the task"
+// @Success 200 {object} map[string]string
+// @Router /api/tasks/{id} [delete]
+func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	taskId := chi.URLParam(r, "id")
+	userId := r.Context().Value("userID").(jwt.MapClaims)["user_id"]
+	data := make(map[string]string)
+
+	// Check task exists
+	sql := "SELECT count(*) FROM tasks where id = ? AND user_id = ?"
+	row := db.QueryRow(sql, taskId, userId)
+
+	var count int
+
+	err := row.Scan(&count)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
+	}
+
+	if count == 0 {
+		data["message"] = "The task not found."
+
+		utils.JsonResponse(w, data, http.StatusNotFound)
+		return
+	}
+
+	// Delete task from DB
+	sql = "DELETE FROM tasks WHERE id = ? AND user_id = ?"
+	_, err = db.Exec(sql, taskId, userId)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
+	}
+
+	data["message"] = "The task deleted successfully."
 	utils.JsonResponse(w, data, 200)
 }
 
