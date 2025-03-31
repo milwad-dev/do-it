@@ -18,6 +18,7 @@ import (
 // @Router /api/labels [get]
 func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 	var labels []models.Label
+	data := make(map[string]interface{})
 
 	query := `
     SELECT l.id, l.title, l.color, l.created_at, l.updated_at, l.user_id, 
@@ -27,7 +28,10 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
     ORDER BY l.created_at DESC`
 	rows, err := db.Query(query)
 	if err != nil {
-		panic(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusBadRequest)
+		return
 	}
 
 	for rows.Next() {
@@ -39,15 +43,19 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 			&user.ID, &user.Name, &user.Email, &user.Phone, &user.CreatedAt,
 		)
 		if err != nil {
-			panic(err)
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, http.StatusBadRequest)
+			return
 		}
 
 		label.User = user
 		labels = append(labels, label)
 	}
 
-	// TODO: Fix the format of json
-	utils.JsonResponse(w, labels, 200)
+	data["data"] = labels
+
+	utils.JsonResponse(w, data, 200)
 }
 
 // StoreLabel => store new label and return json response
@@ -94,7 +102,10 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	query := "INSERT INTO labels (title, color, user_id) VALUES (?, ?, ?)"
 	_, err = db.Exec(query, &label.Title, &label.Color, userId)
 	if err != nil {
-		panic(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
 	}
 
 	data["message"] = "The label store successfully."
