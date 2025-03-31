@@ -15,6 +15,7 @@ import (
 // @Router /api/users [get]
 func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 	var users []models.User
+	data := make(map[string]interface{})
 
 	sql := "SELECT id, name, COALESCE(email, ''), COALESCE(phone, ''), created_at FROM USERS ORDER BY created_at DESC"
 	rows, err := db.Query(sql)
@@ -26,12 +27,16 @@ func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 		var user models.User
 		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Phone, &user.CreatedAt)
 		if err != nil {
-			panic(err.Error())
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, 500)
+			return
 		}
 
 		users = append(users, user)
 	}
 
-	// TODO: Fix the format of json
-	utils.JsonResponse(w, users, 200)
+	data["data"] = users
+
+	utils.JsonResponse(w, data, 200)
 }

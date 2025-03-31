@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
+	"github.com/milwad-dev/do-it/internal/repositories"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
 )
@@ -18,6 +18,7 @@ import (
 // @Router /api/labels [get]
 func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 	var labels []models.Label
+	data := make(map[string]interface{})
 
 	query := `
     SELECT l.id, l.title, l.color, l.created_at, l.updated_at, l.user_id, 
@@ -27,7 +28,10 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
     ORDER BY l.created_at DESC`
 	rows, err := db.Query(query)
 	if err != nil {
-		panic(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusBadRequest)
+		return
 	}
 
 	for rows.Next() {
@@ -39,15 +43,19 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 			&user.ID, &user.Name, &user.Email, &user.Phone, &user.CreatedAt,
 		)
 		if err != nil {
-			panic(err)
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, http.StatusBadRequest)
+			return
 		}
 
 		label.User = user
 		labels = append(labels, label)
 	}
 
-	// TODO: Fix the format of json
-	utils.JsonResponse(w, labels, 200)
+	data["data"] = labels
+
+	utils.JsonResponse(w, data, 200)
 }
 
 // StoreLabel => store new label and return json response
@@ -69,7 +77,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	var label models.Label
 
 	// Get user id
-	userId := r.Context().Value("userID")
+	userId := repositories.GetUserIdFromContext(r)
 
 	// Decode JSON request body into `labels`
 	err := json.NewDecoder(r.Body).Decode(&label)
@@ -94,7 +102,10 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	query := "INSERT INTO labels (title, color, user_id) VALUES (?, ?, ?)"
 	_, err = db.Exec(query, &label.Title, &label.Color, userId)
 	if err != nil {
-		panic(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
 	}
 
 	data["message"] = "The label store successfully."
@@ -113,7 +124,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 // @Router /api/labels/{id} [delete]
 func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 	labelId := chi.URLParam(r, "id")
-	userId := r.Context().Value("userID").(jwt.MapClaims)["user_id"]
+	userId := repositories.GetUserIdFromContext(r)
 	data := make(map[string]string)
 
 	queryExist := "SELECT count(*) FROM labels WHERE id = ? AND user_id = ?"
