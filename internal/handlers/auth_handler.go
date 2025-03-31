@@ -65,7 +65,10 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
 	rows, err := db.Query(queryExist, username)
 	if err != nil {
-		panic(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 500)
+		return
 	}
 	defer rows.Close()
 
@@ -233,7 +236,10 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
 	rows, err := db.Query(queryExist, user.Username)
 	if err != nil {
-		panic(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, 500)
+		return
 	}
 	defer rows.Close()
 
@@ -329,7 +335,10 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	queryExist := fmt.Sprintf("SELECT count(*) FROM users WHERE %s = ?", usernameField)
 	rows, err := db.Query(queryExist, user.Username)
 	if err != nil {
-		panic(err)
+		data["message"] = "Problem on generating token."
+
+		utils.JsonResponse(w, data, 500)
+		return
 	}
 	defer rows.Close()
 
