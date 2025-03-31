@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
+	"github.com/milwad-dev/do-it/internal/repositories"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
 	"time"
@@ -143,7 +143,8 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	// Read request body
 	var task models.Task
 
-	userId := r.Context().Value("userID")
+	// Get userId from context
+	userId := repositories.GetUserIdFromContext(r)
 
 	// Decode JSON request body into `tasks`
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -185,7 +186,7 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 // @Router /api/tasks/{id} [delete]
 func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskId := chi.URLParam(r, "id")
-	userId := r.Context().Value("userID").(jwt.MapClaims)["user_id"]
+	userId := repositories.GetUserIdFromContext(r)
 	data := make(map[string]string)
 
 	// Check task exists

@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/milwad-dev/do-it/internal/models"
+	"github.com/milwad-dev/do-it/internal/repositories"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"net/http"
 )
@@ -69,7 +69,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	var label models.Label
 
 	// Get user id
-	userId := r.Context().Value("userID")
+	userId := repositories.GetUserIdFromContext(r)
 
 	// Decode JSON request body into `labels`
 	err := json.NewDecoder(r.Body).Decode(&label)
@@ -113,7 +113,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 // @Router /api/labels/{id} [delete]
 func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 	labelId := chi.URLParam(r, "id")
-	userId := r.Context().Value("userID").(jwt.MapClaims)["user_id"]
+	userId := repositories.GetUserIdFromContext(r)
 	data := make(map[string]string)
 
 	queryExist := "SELECT count(*) FROM labels WHERE id = ? AND user_id = ?"
