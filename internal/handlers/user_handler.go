@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/milwad-dev/do-it/internal/models"
 	"github.com/milwad-dev/do-it/internal/utils"
-	"log"
 	"net/http"
 )
 
@@ -20,7 +19,10 @@ func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 	sql := "SELECT id, name, COALESCE(email, ''), COALESCE(phone, ''), created_at FROM USERS ORDER BY created_at DESC"
 	rows, err := db.Query(sql)
 	if err != nil {
-		log.Fatal(err)
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusBadRequest)
+		return
 	}
 
 	for rows.Next() {
@@ -29,7 +31,7 @@ func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			data["message"] = err.Error()
 
-			utils.JsonResponse(w, data, 500)
+			utils.JsonResponse(w, data, http.StatusInternalServerError)
 			return
 		}
 
@@ -38,5 +40,5 @@ func (db *DBHandler) GetLatestUsers(w http.ResponseWriter, r *http.Request) {
 
 	data["data"] = users
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
