@@ -55,7 +55,7 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 
 	data["data"] = labels
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // StoreLabel => store new label and return json response
@@ -94,7 +94,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 
 	data["message"] = "The label store successfully."
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // DeleteLabel => delete the label by id and return json response
@@ -132,7 +132,7 @@ func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -143,7 +143,7 @@ func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			data["message"] = err.Error()
 
-			utils.JsonResponse(w, data, 422)
+			utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 			return
 		}
 	}
@@ -152,7 +152,7 @@ func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 	if count == 0 {
 		data["message"] = "The label is not exists."
 
-		utils.JsonResponse(w, data, 404)
+		utils.JsonResponse(w, data, http.StatusNotFound)
 		return
 	}
 
@@ -162,11 +162,11 @@ func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
 	data["message"] = "The label deleted successfully."
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
