@@ -46,7 +46,7 @@ func TestStoreLabel(t *testing.T) {
 func (db *dbHandler) storeLabel(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]string)
 	data["message"] = "The label stored successfully."
-	jsonResponse(w, data, 200)
+	jsonResponse(w, data, http.StatusOK)
 }
 
 // Mock implementation of jsonResponse function for testing purposes
