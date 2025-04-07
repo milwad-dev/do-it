@@ -20,6 +20,9 @@ import (
 func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
+	// Get user id from context
+	userId := repositories.GetUserIdFromContext(r)
+
 	// SQL query to join tasks and users
 	query := `SELECT 
 	   	tasks.id AS task_id,
@@ -43,13 +46,14 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 		labels.created_at AS label_created_at
 	FROM tasks
 	JOIN users ON tasks.user_id = users.id
-	JOIN labels ON tasks.label_id = labels.id`
+	JOIN labels ON tasks.label_id = labels.id
+	WHERE tasks.user_id = ?`
 
 	// Execute the query
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, userId)
 	if err != nil {
 		data["message"] = err.Error()
-		data["status"] = "error"
+
 		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
@@ -92,7 +96,7 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 		// Check for any errors in scanning
 		if err != nil {
 			data["message"] = "Error scanning row: " + err.Error()
-			data["status"] = "error"
+
 			utils.JsonResponse(w, data, http.StatusInternalServerError)
 			return
 		}
@@ -110,14 +114,13 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 	// Check for any row iteration errors
 	if err := rows.Err(); err != nil {
 		data["message"] = "Error iterating rows: " + err.Error()
-		data["status"] = "error"
+
 		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 
 	// Add tasks data to response
 	data["data"] = tasks
-	data["status"] = "success"
 
 	// Respond with the tasks data as JSON
 	utils.JsonResponse(w, data, http.StatusOK)
@@ -188,8 +191,13 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]string
 // @Router /api/tasks/{id} [delete]
 func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	// Get task id from url
 	taskId := chi.URLParam(r, "id")
+
+	// Get user id from context
 	userId := repositories.GetUserIdFromContext(r)
+
+	// Create data
 	data := make(map[string]string)
 
 	// Check task exists
@@ -236,17 +244,25 @@ func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]string
 // @Router /api/tasks/{id}/mark-as-completed [patch]
 func (db *DBHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
+	// Get task id from url
 	taskId := chi.URLParam(r, "id")
+
+	// Get user id from context
+	userId := repositories.GetUserIdFromContext(r)
+
+	// Create data
 	data := make(map[string]string)
 
-	sql := "UPDATE tasks SET completed_at = ? WHERE id = ?"
-	res, err := db.Exec(sql, time.Now(), taskId)
+	sql := "UPDATE tasks SET completed_at = ? WHERE id = ? AND user_id = ?"
+	res, err := db.Exec(sql, time.Now(), taskId, userId)
 	if err != nil {
 		data["message"] = err.Error()
 
 		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
+
+	// If not row affected, we're return error
 	if rowsAffected, _ := res.RowsAffected(); rowsAffected == 0 {
 		data["message"] = "Error on get affected rows."
 
