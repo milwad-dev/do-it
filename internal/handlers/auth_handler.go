@@ -37,7 +37,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 400)
+		utils.JsonResponse(w, data, http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -84,7 +84,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	if count == 1 {
 		data["message"] = "The user already exists."
 
-		utils.JsonResponse(w, data, 302)
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	if errInsert != nil {
 		data["message"] = fmt.Sprintf("Problem on creating user: %s", errInsert.Error())
 
-		utils.JsonResponse(w, data, 302)
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	if errToken != nil {
 		data["message"] = "Problem on generating token."
 
-		utils.JsonResponse(w, data, 302)
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -115,7 +115,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	data["message"] = "Register completed."
 	data["token"] = token
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // LoginAuth => Check user credentials and create jwt token
@@ -138,7 +138,7 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		data["message"] = err.Error()
-		utils.JsonResponse(w, data, 400)
+		utils.JsonResponse(w, data, http.StatusBadRequest)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -166,15 +166,17 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 
 	err = row.Scan(&userID, &storedPassword)
 	if err != nil {
-		data["message"] = "Invalid username or password"
-		utils.JsonResponse(w, data, 401)
+		data["message"] = "Invalid username or password."
+
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
 	// Compare stored password hash with provided password
 	if !services.CheckPasswordHash(user.Password, storedPassword) {
 		data["message"] = "Invalid username or password"
-		utils.JsonResponse(w, data, 401)
+
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -182,7 +184,8 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	token, errToken := services.GenerateToken(uint(userID))
 	if errToken != nil {
 		data["message"] = "Problem generating token."
-		utils.JsonResponse(w, data, 500)
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -190,7 +193,7 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	data["message"] = "Login successful."
 	data["token"] = token
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // ForgotPasswordAuth => Send email or sms to user for forgot password
@@ -213,7 +216,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 400)
+		utils.JsonResponse(w, data, http.StatusBadRequest)
 		return
 	}
 
@@ -225,7 +228,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -238,7 +241,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -247,7 +250,10 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
-			log.Fatal(err)
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, http.StatusInternalServerError)
+			return
 		}
 	}
 
@@ -255,7 +261,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	if count == 0 {
 		data["message"] = "The user is not exists."
 
-		utils.JsonResponse(w, data, 302)
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -271,7 +277,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 		data["message"] = "Sms sent successfully."
 	}
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // ForgotPasswordVerifyAuth => Verify the user with otp
@@ -312,7 +318,7 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 400)
+		utils.JsonResponse(w, data, http.StatusBadRequest)
 		return
 	}
 
@@ -324,7 +330,7 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -337,7 +343,7 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = "Problem on generating token."
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -346,7 +352,10 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
-			log.Fatal(err)
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, http.StatusInternalServerError)
+			return
 		}
 	}
 
@@ -354,7 +363,7 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	if count == 0 {
 		data["message"] = "The user is not exists."
 
-		utils.JsonResponse(w, data, 302)
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -362,7 +371,7 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	if user.NewPassword != user.ReNewPassword {
 		data["message"] = "The new password is not the same with retry new password."
 
-		utils.JsonResponse(w, data, 302)
+		utils.JsonResponse(w, data, http.StatusFound)
 		return
 	}
 
@@ -373,12 +382,12 @@ func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = "Problem on updating password."
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 
 	data["message"] = "Password updated successfully."
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // detectEmailOrPhone => Detects whether the username is an email or phone
