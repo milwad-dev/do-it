@@ -18,6 +18,11 @@ import (
 // @Router /api/labels [get]
 func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 	var labels []models.Label
+
+	// Get user id from context
+	userId := repositories.GetUserIdFromContext(r)
+
+	// Create data
 	data := make(map[string]interface{})
 
 	query := `
@@ -25,8 +30,9 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
            u.id, u.name, COALESCE(u.email, ''), COALESCE(u.phone, ''), u.created_at 
     FROM labels l
     JOIN users u ON l.user_id = u.id
-    ORDER BY l.created_at DESC`
-	rows, err := db.Query(query)
+    ORDER BY l.created_at DESC
+    WHERE user_id = ?`
+	rows, err := db.Query(query, userId)
 	if err != nil {
 		data["message"] = err.Error()
 
@@ -76,7 +82,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Read request body
 	var label models.Label
 
-	// Get user id
+	// Get user id from context
 	userId := repositories.GetUserIdFromContext(r)
 
 	// Decode JSON request body into `labels`
@@ -123,8 +129,13 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} map[string]string
 // @Router /api/labels/{id} [delete]
 func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
+	// Get label id from url
 	labelId := chi.URLParam(r, "id")
+
+	// Get user id from context
 	userId := repositories.GetUserIdFromContext(r)
+
+	// Create data
 	data := make(map[string]string)
 
 	queryExist := "SELECT count(*) FROM labels WHERE id = ? AND user_id = ?"
