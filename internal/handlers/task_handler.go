@@ -161,7 +161,7 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 422)
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -171,13 +171,13 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 
 	data["message"] = "The task store successfully."
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // DeleteTask => Delete task by id
@@ -224,7 +224,8 @@ func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data["message"] = "The task deleted successfully."
-	utils.JsonResponse(w, data, 200)
+
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // MarkTaskAsCompleted => Mark task as completed
@@ -243,17 +244,17 @@ func (db *DBHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		data["message"] = err.Error()
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 	if rowsAffected, _ := res.RowsAffected(); rowsAffected == 0 {
 		data["message"] = "Error on get affected rows."
 
-		utils.JsonResponse(w, data, 500)
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
 		return
 	}
 
 	data["message"] = "The task mark as completed."
 
-	utils.JsonResponse(w, data, 200)
+	utils.JsonResponse(w, data, http.StatusOK)
 }
