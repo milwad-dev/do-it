@@ -16,7 +16,7 @@ import (
 // @Description Get the latest tasks
 // @Produce json
 // @Success 200 {object} []models.Task
-// @Router /api/tasks [get]
+// @Router /tasks [get]
 func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 
@@ -136,7 +136,7 @@ func (db *DBHandler) GetLatestTasks(w http.ResponseWriter, r *http.Request) {
 // @Param label_id body string true "The label ID of the task"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/tasks [post]
+// @Router /tasks [post]
 func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
@@ -189,7 +189,7 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id query string true "The ID of the task"
 // @Success 200 {object} map[string]string
-// @Router /api/tasks/{id} [delete]
+// @Router /tasks/{id} [delete]
 func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	// Get task id from url
 	taskId := chi.URLParam(r, "id")
@@ -242,7 +242,7 @@ func (db *DBHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id query string true "The ID of the task"
 // @Success 200 {object} map[string]string
-// @Router /api/tasks/{id}/mark-as-completed [patch]
+// @Router /tasks/{id}/mark-as-completed [patch]
 func (db *DBHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
 	// Get task id from url
 	taskId := chi.URLParam(r, "id")

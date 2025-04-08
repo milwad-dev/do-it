@@ -15,7 +15,7 @@ import (
 // @Description Get the latest labels
 // @Produce json
 // @Success 200 {object} []models.Label
-// @Router /api/labels [get]
+// @Router /labels [get]
 func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 	var labels []models.Label
 
@@ -72,7 +72,7 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 // @Param color body string true "The color of the label"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/labels [post]
+// @Router /labels [post]
 func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	r.ParseForm()
@@ -127,7 +127,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]string
 // @Failure 422 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/labels/{id} [delete]
+// @Router /labels/{id} [delete]
 func (db *DBHandler) DeleteLabel(w http.ResponseWriter, r *http.Request) {
 	// Get label id from url
 	labelId := chi.URLParam(r, "id")

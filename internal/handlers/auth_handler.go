@@ -22,7 +22,7 @@ import (
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 422 {object} map[string]string
-// @Router /api/register [post]
+// @Router /register [post]
 func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
 		Name     string `json:"name" validate:"required,min=3,max=250"`
@@ -126,7 +126,7 @@ func (db *DBHandler) RegisterAuth(w http.ResponseWriter, r *http.Request) {
 // @Param password body string true "The password of the user"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/login [post]
+// @Router /login [post]
 func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 	user := struct {
 		Username string `json:"username" validate:"required,min=3,max=250"`
@@ -203,7 +203,7 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 // @Param username body string true "The email or phone of the user"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/forgot-password [post]
+// @Router /forgot-password [post]
 func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
 		Username string `json:"username" validate:"required,min=3,max=250"`
@@ -287,7 +287,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 // @Param username body string true "The email or phone of the user"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/forgot-password-verify [post]
+// @Router /forgot-password-verify [post]
 func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Request) {
 	// TODO:
 }
@@ -303,7 +303,7 @@ func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Req
 // @Failure 302 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /api/reset-password [post]
+// @Router /reset-password [post]
 func (db *DBHandler) ResetPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
 		Username      string `json:"username" validate:"required,min=3,max=250"`
