@@ -9,12 +9,97 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Do-It Support",
+            "url": "https://github.com/milwad-dev",
+            "email": "milwad.dev@gmail.com"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/forgot-password": {
+            "post": {
+                "description": "Send email or sms to user for forgot password",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Forgot password",
+                "parameters": [
+                    {
+                        "description": "The email or phone of the user",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/forgot-password-verify": {
+            "post": {
+                "description": "Verify the user with otp",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Forgot Password Verify",
+                "parameters": [
+                    {
+                        "description": "The email or phone of the user",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/labels": {
             "get": {
                 "description": "Get the latest labels",
@@ -82,7 +167,54 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/register": {
+        "/api/labels/{id}": {
+            "delete": {
+                "description": "delete label by id",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete Label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The id of the label",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login": {
             "post": {
                 "description": "Check user credentials and login",
                 "produces": [
@@ -121,6 +253,149 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/register": {
+            "post": {
+                "description": "Create new user with token",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Register user",
+                "parameters": [
+                    {
+                        "description": "The name of the user",
+                        "name": "name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The email or phone of the user",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The password of the user",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/reset-password": {
+            "post": {
+                "description": "Reset user password",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "The email or phone of the user",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The new password",
+                        "name": "new_password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The retry new password",
+                        "name": "re_new_password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -216,6 +491,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/tasks/{id}": {
+            "delete": {
+                "description": "Delete task by id",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The ID of the task",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/tasks/{id}/mark-as-completed": {
             "patch": {
                 "description": "mark task as completed",
@@ -269,9 +573,15 @@ const docTemplate = `{
     "definitions": {
         "models.Label": {
             "type": "object",
+            "required": [
+                "color",
+                "title"
+            ],
             "properties": {
                 "color": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "created_at": {
                     "type": "string"
@@ -280,7 +590,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "title": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "updated_at": {
                     "type": "string"
@@ -292,6 +604,12 @@ const docTemplate = `{
         },
         "models.Task": {
             "type": "object",
+            "required": [
+                "description",
+                "label_id",
+                "status",
+                "title"
+            ],
             "properties": {
                 "completed_at": {
                     "type": "string"
@@ -300,7 +618,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "id": {
                     "type": "integer"
@@ -312,10 +632,15 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "pending"
+                    ]
                 },
                 "title": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250,
+                    "minLength": 3
                 },
                 "updated_at": {
                     "type": "string"
@@ -373,11 +698,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8000",
-	BasePath:         "/api",
-	Schemes:          []string{"http"},
-	Title:            "Do-It",
-	Description:      "The todo app made by Golang and Milwad Khosravi",
+	Host:             "",
+	BasePath:         "/api/",
+	Schemes:          []string{},
+	Title:            "Do-It Swagger",
+	Description:      "This is the do-it swagger docs",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

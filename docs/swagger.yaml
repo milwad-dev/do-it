@@ -1,18 +1,26 @@
+basePath: /api/
 definitions:
   models.Label:
     properties:
       color:
+        maxLength: 250
+        minLength: 3
         type: string
       created_at:
         type: string
       id:
         type: integer
       title:
+        maxLength: 250
+        minLength: 3
         type: string
       updated_at:
         type: string
       user:
         $ref: '#/definitions/models.User'
+    required:
+    - color
+    - title
     type: object
   models.Task:
     properties:
@@ -21,6 +29,8 @@ definitions:
       created_at:
         type: string
       description:
+        maxLength: 250
+        minLength: 3
         type: string
       id:
         type: integer
@@ -29,8 +39,12 @@ definitions:
       label_id:
         type: integer
       status:
+        enum:
+        - pending
         type: string
       title:
+        maxLength: 250
+        minLength: 3
         type: string
       updated_at:
         type: string
@@ -38,6 +52,11 @@ definitions:
         $ref: '#/definitions/models.User'
       user_id:
         type: integer
+    required:
+    - description
+    - label_id
+    - status
+    - title
     type: object
   models.User:
     properties:
@@ -68,8 +87,67 @@ definitions:
     - phone
     type: object
 info:
-  contact: {}
+  contact:
+    email: milwad.dev@gmail.com
+    name: Do-It Support
+    url: https://github.com/milwad-dev
+  description: This is the do-it swagger docs
+  termsOfService: http://swagger.io/terms/
+  title: Do-It Swagger
+  version: "1.0"
 paths:
+  /api/forgot-password:
+    post:
+      description: Send email or sms to user for forgot password
+      parameters:
+      - description: The email or phone of the user
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Forgot password
+  /api/forgot-password-verify:
+    post:
+      description: Verify the user with otp
+      parameters:
+      - description: The email or phone of the user
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Forgot Password Verify
   /api/labels:
     get:
       description: Get the latest labels
@@ -114,7 +192,38 @@ paths:
               type: string
             type: object
       summary: Store Label
-  /api/register:
+  /api/labels/{id}:
+    delete:
+      description: delete label by id
+      parameters:
+      - description: The id of the label
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete Label
+  /api/login:
     post:
       description: Check user credentials and login
       parameters:
@@ -146,6 +255,100 @@ paths:
               type: string
             type: object
       summary: Login user
+  /api/register:
+    post:
+      description: Create new user with token
+      parameters:
+      - description: The name of the user
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: The email or phone of the user
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: The password of the user
+        in: body
+        name: password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register user
+  /api/reset-password:
+    post:
+      description: Reset user password
+      parameters:
+      - description: The email or phone of the user
+        in: body
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: The new password
+        in: body
+        name: new_password
+        required: true
+        schema:
+          type: string
+      - description: The retry new password
+        in: body
+        name: re_new_password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "302":
+          description: Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reset Password
   /api/tasks:
     get:
       description: Get the latest tasks
@@ -202,6 +405,25 @@ paths:
               type: string
             type: object
       summary: Store Task
+  /api/tasks/{id}:
+    delete:
+      description: Delete task by id
+      parameters:
+      - description: The ID of the task
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete task
   /api/tasks/{id}/mark-as-completed:
     patch:
       description: mark task as completed
