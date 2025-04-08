@@ -2,6 +2,7 @@ package routers
 
 import (
 	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/milwad-dev/do-it/docs"
 	"github.com/milwad-dev/do-it/internal/handlers"
 	"github.com/milwad-dev/do-it/internal/middleware"
@@ -20,22 +21,22 @@ func GetRouter(handler *handlers.DBHandler) *chi.Mux {
 
 		// Labels
 		r.Get("/labels", handler.GetLatestLabels)
-		r.Post("/labels", handler.StoreLabel)
+		r.With(chiMiddleware.Throttle(4)).Post("/labels", handler.StoreLabel)
 		r.Delete("/labels/{id}", handler.DeleteLabel)
 
 		// Tasks
 		r.Get("/tasks", handler.GetLatestTasks)
-		r.Post("/tasks", handler.StoreTask)
+		r.With(chiMiddleware.Throttle(4)).Post("/tasks", handler.StoreTask)
 		r.Patch("/tasks/{id}/mark-as-completed", handler.MarkTaskAsCompleted)
 		r.Delete("/tasks/{id}", handler.DeleteTask)
 	})
 
 	// Auth
-	router.Post("/api/register", handler.RegisterAuth)
-	router.Post("/api/login", handler.LoginAuth)
-	router.Post("/api/forgot-password", handler.ForgotPasswordAuth)
-	router.Post("/api/forgot-password-verify", handler.ForgotPasswordVerifyAuth)
-	router.Post("/api/reset-password", handler.ResetPasswordAuth)
+	router.With(chiMiddleware.Throttle(4)).Post("/api/register", handler.RegisterAuth)
+	router.With(chiMiddleware.Throttle(4)).Post("/api/login", handler.LoginAuth)
+	router.With(chiMiddleware.Throttle(4)).Post("/api/forgot-password", handler.ForgotPasswordAuth)
+	router.With(chiMiddleware.Throttle(4)).Post("/api/forgot-password-verify", handler.ForgotPasswordVerifyAuth)
+	router.With(chiMiddleware.Throttle(4)).Post("/api/reset-password", handler.ResetPasswordAuth)
 
 	// Swagger
 	router.Get("/api/swagger/*", httpSwagger.Handler(
