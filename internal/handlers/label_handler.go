@@ -123,7 +123,7 @@ func (db *DBHandler) StoreLabel(w http.ResponseWriter, r *http.Request) {
 // @Summary Delete Label
 // @Description delete label by id
 // @Produce json
-// @Param id url integer true "The id of the label"
+// @Param id path integer true "The id of the label"
 // @Success 200 {object} map[string]string
 // @Failure 422 {object} map[string]string
 // @Failure 404 {object} map[string]string

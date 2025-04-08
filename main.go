@@ -12,6 +12,16 @@ import (
 	"os"
 )
 
+// @title Do-It Swagger
+// @version 1.0
+// @description This is the do-it swagger docs
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Do-It Support
+// @contact.url https://github.com/milwad-dev
+// @contact.email milwad.dev@gmail.com
+
+// @BasePath /api/
 func main() {
 	// Load environments
 	err := godotenv.Load()
