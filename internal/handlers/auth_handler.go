@@ -207,6 +207,7 @@ func (db *DBHandler) LoginAuth(w http.ResponseWriter, r *http.Request) {
 func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) {
 	var user struct {
 		Username string `json:"username" validate:"required,min=3,max=250"`
+		Name     string
 	}
 
 	data := make(map[string]any)
@@ -265,13 +266,47 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Read name of the user from db
+	row, err := db.Query(fmt.Sprintf("SELECT name FROM users WHERE %s = ?", usernameField), user.Username)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
+	}
+
+	defer row.Close()
+
+	for row.Next() {
+		if err := row.Scan(&user.Name); err != nil {
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, http.StatusInternalServerError)
+			return
+		}
+	}
+
 	// Send email or sms for user
 	if usernameField == "email" {
-		// TODO:
+		mailData := struct {
+			Subject string
+			Name    string
+			Body    string
+		}{
+			Subject: "Forgot Password",
+			Name:    user.Name,
+			Body:    "You forgot password",
+		}
+		err := services.SendMail(mailData, "forgot-password.html", user.Username)
+		if err != nil {
+			data["message"] = err.Error()
+
+			utils.JsonResponse(w, data, http.StatusInternalServerError)
+			return
+		}
 
 		data["message"] = "Email sent successfully."
 	} else {
-		// send sms
 		// TODO:
 
 		data["message"] = "Sms sent successfully."
