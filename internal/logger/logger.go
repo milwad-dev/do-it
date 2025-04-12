@@ -10,7 +10,14 @@ func InitLogger(isProduction bool) {
 	if isProduction {
 		Log, err = zap.NewProduction()
 	} else {
-		Log, err = zap.NewDevelopment()
+		cfg := zap.Config{
+			Encoding:         "json",
+			Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
+			OutputPaths:      []string{"stdout", "logs/app.log"},
+			ErrorOutputPaths: []string{"stderr"},
+			EncoderConfig:    zap.NewProductionEncoderConfig(),
+		}
+		Log, err = cfg.Build()
 	}
 
 	if err != nil {
