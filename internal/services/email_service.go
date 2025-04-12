@@ -14,11 +14,10 @@ func SendEmail(data struct {
 	Body    string
 }, templatePath, toDest string) error {
 	// Email auth info
-	from := "b71c6c2d21b3b6"
-	password := "258c9932614d3a" // TODO: Read from env
-	to := "recipient@example.com"
-	smtpHost := "sandbox.smtp.mailtrap.io"
-	smtpPort := "587"
+	from := os.Getenv("MAIL_FROM")
+	password := os.Getenv("MAIL_PASSWORD")
+	smtpHost := os.Getenv("MAIL_HOST")
+	smtpPort := os.Getenv("MAIL_PORT")
 
 	// Parse HTML template
 	tmpl, err := template.ParseFiles("internal/templates/" + templatePath)
@@ -29,12 +28,14 @@ func SendEmail(data struct {
 
 	var body bytes.Buffer
 
+	// Get app data
 	appName := os.Getenv("APP_NAME")
+	appMail := os.Getenv("APP_MAIL")
 
 	// Write email headers
 	body.WriteString("MIME-Version: 1.0\r\n")
 	body.WriteString("Content-Type: text/html; charset=\"UTF-8\"\r\n")
-	body.WriteString(fmt.Sprintf("From: %s\r\n", "info@do-it.com"))
+	body.WriteString(fmt.Sprintf("From: %s\r\n", appMail))
 	body.WriteString(fmt.Sprintf("To: %s\r\n", toDest))
 	body.WriteString(fmt.Sprintf("Subject: %s - %s\r\n", appName, data.Subject))
 	body.WriteString("\r\n")
@@ -54,7 +55,7 @@ func SendEmail(data struct {
 		smtpHost+":"+smtpPort,
 		auth,
 		from,
-		[]string{to},
+		[]string{toDest},
 		body.Bytes(),
 	)
 
