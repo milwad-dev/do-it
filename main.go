@@ -53,7 +53,7 @@ func main() {
 	r := routers.GetRouter(handler)
 
 	// Serve application
-	fmt.Printf("Your application run on %v \n", port)
+	fmt.Printf("Starting server on %v \n", port)
 	err = http.ListenAndServe(port, r)
 	if err != nil {
 		log.Fatal(err)
