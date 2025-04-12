@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"github.com/milwad-dev/do-it/internal/handlers"
+	"github.com/milwad-dev/do-it/internal/logger"
 	"github.com/milwad-dev/do-it/internal/routers"
 	"log"
 	"net/http"
@@ -42,6 +43,11 @@ func main() {
 
 	// Set and get handler
 	handler := handlers.NewDBHandler(db)
+
+	// Initialize logger
+	isProduction := os.Getenv("APP_ENV") == "production"
+	logger.InitLogger(isProduction)
+	defer logger.Log.Sync()
 
 	// Router
 	r := routers.GetRouter(handler)
