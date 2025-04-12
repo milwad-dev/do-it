@@ -3,6 +3,8 @@ package services
 import (
 	"bytes"
 	"fmt"
+	"github.com/milwad-dev/do-it/internal/logger"
+	"go.uber.org/zap"
 	"net/smtp"
 	"os"
 	"text/template"
@@ -23,7 +25,14 @@ func SendMail(data struct {
 	// Parse HTML template
 	tmpl, err := template.ParseFiles("internal/templates/" + templatePath)
 	if err != nil {
-		// TODO: Add log
+		logger.Log.Error(
+			"Error on parsing template",
+			zap.String("Error Message", err.Error()),
+			zap.String("From", from),
+			zap.String("To", toDest),
+			zap.String("Subject", data.Subject),
+		)
+
 		return err
 	}
 
@@ -44,7 +53,14 @@ func SendMail(data struct {
 	// Execute the template with data
 	err = tmpl.Execute(&body, data)
 	if err != nil {
-		// TODO: Add log
+		logger.Log.Error(
+			"Error on executing template",
+			zap.String("Error Message", err.Error()),
+			zap.String("From", from),
+			zap.String("To", toDest),
+			zap.String("Subject", data.Subject),
+		)
+
 		return err
 	}
 
@@ -61,7 +77,14 @@ func SendMail(data struct {
 	)
 
 	if err != nil {
-		// TODO: Add log
+		logger.Log.Error(
+			"Error on sending mail",
+			zap.String("Error Message", err.Error()),
+			zap.String("From", from),
+			zap.String("To", toDest),
+			zap.String("Subject", data.Subject),
+		)
+
 		return err
 	}
 
