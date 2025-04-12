@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"github.com/milwad-dev/do-it/internal/handlers"
+	"github.com/milwad-dev/do-it/internal/logger"
 	"github.com/milwad-dev/do-it/internal/routers"
 	"log"
 	"net/http"
@@ -43,11 +44,16 @@ func main() {
 	// Set and get handler
 	handler := handlers.NewDBHandler(db)
 
+	// Initialize logger
+	isProduction := os.Getenv("APP_ENV") == "production"
+	logger.InitLogger(isProduction)
+	defer logger.Log.Sync()
+
 	// Router
 	r := routers.GetRouter(handler)
 
 	// Serve application
-	fmt.Printf("Your application run on %v \n", port)
+	fmt.Printf("Starting server on %v \n", port)
 	err = http.ListenAndServe(port, r)
 	if err != nil {
 		log.Fatal(err)

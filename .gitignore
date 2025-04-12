@@ -28,3 +28,6 @@ go.work
 
 # Miscellaneous
 todo.txt
+
+# Logger
+logs/*.log

@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/milwad-dev/do-it/internal/logger"
 	"net/http"
 )
 
@@ -19,11 +20,11 @@ func JsonResponse(w http.ResponseWriter, data any, statusCode int) {
 	if statusCode >= 400 && statusCode < 500 {
 		status = "Client Error"
 
-		// TODO: Add log
+		logger.Log.Error("Client Error")
 	} else if statusCode >= 500 && statusCode < 600 {
 		status = "Server Error"
 
-		// TODO: Add log
+		logger.Log.Error("Server Error")
 	}
 
 	// Attach status to data if data is map
