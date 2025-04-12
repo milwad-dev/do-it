@@ -8,7 +8,8 @@ import (
 	"text/template"
 )
 
-func SendEmail(data struct {
+// SendMail => send mail to user with custom html template
+func SendMail(data struct {
 	Subject string
 	Name    string
 	Body    string
