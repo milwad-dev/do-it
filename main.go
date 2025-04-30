@@ -45,14 +45,6 @@ func main() {
 	// Run tables
 	runTables(db)
 
-	// Set and get handler
-	handler := handlers.NewDBHandler(db)
-
-	// Initialize logger
-	isProduction := os.Getenv("APP_ENV") == "production"
-	logger.InitLogger(isProduction)
-	defer logger.Log.Sync()
-
 	// Connect to Redis
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379", // Replace with your Redis server address
@@ -67,6 +59,14 @@ func main() {
 	} else {
 		fmt.Println("Connected to Redis:", pong)
 	}
+
+	// Set and get handler
+	handler := handlers.NewDBHandler(db, client)
+
+	// Initialize logger
+	isProduction := os.Getenv("APP_ENV") == "production"
+	logger.InitLogger(isProduction)
+	defer logger.Log.Sync()
 
 	// Router
 	r := routers.GetRouter(handler)
