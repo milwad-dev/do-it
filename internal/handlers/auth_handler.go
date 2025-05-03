@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/milwad-dev/do-it/internal/repositories"
 	"github.com/milwad-dev/do-it/internal/services"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"log"
@@ -337,7 +338,73 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 // @Failure 400 {object} map[string]string
 // @Router /forgot-password-verify [post]
 func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Request) {
-	// TODO:
+	var user struct {
+		id          int
+		password    string `json:"password" validate:"required,min=8,max=250"`
+		re_password string `json:"re_password" validate:"required,min=8,max=250"`
+		code        string `json:"code" validate:"required"`
+	}
+	user.id = repositories.GetUserIdFromContext(r).(int)
+	data := make(map[string]any)
+
+	code, err := db.redisClient.Get(r.Context(), "forgot-password-"+string(rune(user.id))).Result()
+	if err != nil {
+		data["message"] = "Try again."
+
+		utils.JsonResponse(w, data, http.StatusFound)
+		return
+	}
+
+	// Parse body
+	err = json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusBadRequest)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Check verify code is valid
+	if code != user.code {
+		data["message"] = "The code is not valid."
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Check password be same
+	if user.password != user.re_password {
+		data["message"] = "The password is not valid."
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Update user password
+	query := "UPDATE users SET password = ? WHERE id = ?"
+	password, _ := services.HashPassword(user.password)
+	_, err = db.Exec(query, password, user.id)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
+	}
+
+	data["message"] = "The password update successfully."
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // ResetPasswordAuth => Reset user password
