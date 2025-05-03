@@ -6,7 +6,7 @@ import (
 )
 
 type DBHandler struct {
-	DB          *sql.DB
+	*sql.DB
 	redisClient *redis.Client
 }
 
