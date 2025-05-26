@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
@@ -8,10 +9,13 @@ import (
 	"github.com/milwad-dev/do-it/internal/handlers"
 	"github.com/milwad-dev/do-it/internal/logger"
 	"github.com/milwad-dev/do-it/internal/routers"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 	"os"
 )
+
+var ctx = context.Background()
 
 // @title Do-It Swagger
 // @version 1.0
@@ -41,8 +45,23 @@ func main() {
 	// Run tables
 	runTables(db)
 
+	// Connect to Redis
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // Replace with your Redis server address
+		Password: "",               // No password for local development
+		DB:       0,                // Default DB
+	})
+
+	// Ping the Redis server to check the connection
+	pong, err := client.Ping(ctx).Result()
+	if err != nil {
+		log.Fatal("Error connecting to Redis:", err)
+	} else {
+		fmt.Println("Connected to Redis:", pong)
+	}
+
 	// Set and get handler
-	handler := handlers.NewDBHandler(db)
+	handler := handlers.NewDBHandler(db, client)
 
 	// Initialize logger
 	isProduction := os.Getenv("APP_ENV") == "production"

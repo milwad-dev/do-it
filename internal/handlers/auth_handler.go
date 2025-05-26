@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/milwad-dev/do-it/internal/repositories"
 	"github.com/milwad-dev/do-it/internal/services"
 	"github.com/milwad-dev/do-it/internal/utils"
 	"log"
@@ -11,6 +13,8 @@ import (
 	"net/mail"
 	"regexp"
 )
+
+var ctx = context.Background()
 
 // RegisterAuth => Register user and create token
 // @Summary Register user
@@ -208,6 +212,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	var user struct {
 		Username string `json:"username" validate:"required,min=3,max=250"`
 		Name     string
+		Id       int
 	}
 
 	data := make(map[string]any)
@@ -267,7 +272,7 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Read name of the user from db
-	row, err := db.Query(fmt.Sprintf("SELECT name FROM users WHERE %s = ?", usernameField), user.Username)
+	row, err := db.Query(fmt.Sprintf("SELECT id, name FROM users WHERE %s = ?", usernameField), user.Username)
 	if err != nil {
 		data["message"] = err.Error()
 
@@ -278,12 +283,21 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 	defer row.Close()
 
 	for row.Next() {
-		if err := row.Scan(&user.Name); err != nil {
+		if err := row.Scan(&user.Id, &user.Name); err != nil {
 			data["message"] = err.Error()
 
 			utils.JsonResponse(w, data, http.StatusInternalServerError)
 			return
 		}
+	}
+
+	// Generate random code
+	code := utils.NumberBetween(1000, 9999)
+
+	// Set a key-value pair
+	err = db.redisClient.Set(ctx, "forgot-password-"+string(rune(user.Id)), code, 0).Err()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Send email or sms for user
@@ -324,7 +338,73 @@ func (db *DBHandler) ForgotPasswordAuth(w http.ResponseWriter, r *http.Request) 
 // @Failure 400 {object} map[string]string
 // @Router /forgot-password-verify [post]
 func (db *DBHandler) ForgotPasswordVerifyAuth(w http.ResponseWriter, r *http.Request) {
-	// TODO:
+	var user struct {
+		id          int
+		password    string `json:"password" validate:"required,min=8,max=250"`
+		re_password string `json:"re_password" validate:"required,min=8,max=250"`
+		code        string `json:"code" validate:"required"`
+	}
+	user.id = repositories.GetUserIdFromContext(r).(int)
+	data := make(map[string]any)
+
+	code, err := db.redisClient.Get(r.Context(), "forgot-password-"+string(rune(user.id))).Result()
+	if err != nil {
+		data["message"] = "Try again."
+
+		utils.JsonResponse(w, data, http.StatusFound)
+		return
+	}
+
+	// Parse body
+	err = json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusBadRequest)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	err = validate.Struct(user)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Check verify code is valid
+	if code != user.code {
+		data["message"] = "The code is not valid."
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Check password be same
+	if user.password != user.re_password {
+		data["message"] = "The password is not valid."
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Update user password
+	query := "UPDATE users SET password = ? WHERE id = ?"
+	password, _ := services.HashPassword(user.password)
+	_, err = db.Exec(query, password, user.id)
+	if err != nil {
+		data["message"] = err.Error()
+
+		utils.JsonResponse(w, data, http.StatusInternalServerError)
+		return
+	}
+
+	data["message"] = "The password update successfully."
+	utils.JsonResponse(w, data, http.StatusOK)
 }
 
 // ResetPasswordAuth => Reset user password
