@@ -22,6 +22,7 @@ go run main.go
 - View all available API endpoints.
 - Test API endpoints directly from the browser.
 - Explore detailed request/response models and schemas.
+- Dockerized
 
 #### Notes
 
