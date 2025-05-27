@@ -1,11 +1,12 @@
 #!/bin/sh
 
-echo "Waiting for MySQL..."
+echo "Waiting for MySQL to be ready at $DB_HOST:$DB_PORT..."
 
-while ! nc -z db 3306; do
-  sleep 1
+while ! mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" --silent; do
+  echo "Waiting for database connection..."
+  sleep 2
 done
 
-echo "MySQL is up - executing app"
+echo "MySQL is ready! Starting the app..."
 
 exec "$@"
