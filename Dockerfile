@@ -19,15 +19,20 @@ RUN go build -o app main.go
 
 FROM debian:bookworm-slim
 
+# Install mysql client
+RUN apt update && apt install -y default-mysql-client && apt clean
+
 # Set work directory
 WORKDIR /app
 
 # Copy build file
 COPY --from=builder /app/app .
 COPY --from=builder /app/.env .
+COPY --from=builder /app/wait-for-db.sh .
+RUN chmod +x wait-for-db.sh
 
 # Port
 EXPOSE 8000
 
 # Run build
-CMD ["./app"]
+CMD ["./wait-for-db.sh", "./app"]
