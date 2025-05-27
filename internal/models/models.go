@@ -24,7 +24,7 @@ type Label struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 
-	User `json:"user"`
+	User `json:"user"  validate:"-"`
 }
 
 type Task struct {
