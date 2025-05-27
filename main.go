@@ -47,9 +47,9 @@ func main() {
 
 	// Connect to Redis
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Replace with your Redis server address
-		Password: "",               // No password for local development
-		DB:       0,                // Default DB
+		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
+		Password: "",
+		DB:       0,
 	})
 
 	// Ping the Redis server to check the connection
