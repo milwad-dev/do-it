@@ -8,7 +8,11 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
+# Copy content
 COPY . .
+
+# Create log directory
+RUN mkdir -p logs
 
 # Build the app
 RUN go build -o app main.go
