@@ -168,6 +168,18 @@ func (db *DBHandler) StoreTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate label
+	count := 0
+	existsLabel := "SELECT count(*) FROM labels WHERE id = ? AND user_id = ?"
+	row := db.QueryRow(existsLabel, task.LabelId, userId)
+	row.Scan(&count)
+	if count == 0 {
+		data["message"] = "The label is not exists."
+
+		utils.JsonResponse(w, data, http.StatusUnprocessableEntity)
+		return
+	}
+
 	// Exec query (id, created_at and updated_at filled automatically)
 	query := "INSERT INTO tasks (title, description, status, label_id, user_id) VALUES (?, ?, ?, ?, ?)"
 	_, err = db.Exec(query, &task.Title, &task.Description, &task.Status, &task.LabelId, userId)
