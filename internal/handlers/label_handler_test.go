@@ -1,58 +1,58 @@
 package handlers
 
 import (
-	"bytes"
+	"context"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/require"
 )
 
-// Mock dbHandler struct to satisfy the dbHandler interface
-type dbHandler struct{}
+func TestDeleteLabel_OK(t *testing.T) {
+	// Mock DB
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-func TestStoreLabel(t *testing.T) {
-	// Create a mock dbHandler with any necessary dependencies
-	mockDB := &dbHandler{} // You may need to create a mock dbHandler
+	// Expectations
+	mock.ExpectQuery(`SELECT count\(\*\) FROM labels WHERE id = \? AND user_id = \?`).
+		WithArgs("42", float64(1)).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
-	// Create a sample label JSON body
-	labelJSON := []byte(`{"title": "Test Label", "color": "#FF0000"}`)
+	mock.ExpectExec(`DELETE FROM labels WHERE id = \? AND user_id = \?`).
+		WithArgs("42", float64(1)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	// Create a mock HTTP request with the sample label data
-	req, err := http.NewRequest("POST", "/labels", bytes.NewBuffer(labelJSON))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Handler
+	h := &DBHandler{DB: db}
 
-	// Create a ResponseRecorder to record the response
+	// Request setup
+	req := httptest.NewRequest(http.MethodDelete, "/labels/42", nil)
+
+	// Add Chi route context with id param
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("id", "42")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	// Add JWT claims to context
+	req = req.WithContext(context.WithValue(req.Context(), "userID", jwt.MapClaims{
+		"user_id": float64(1),
+	}))
+
+	// Recorder & handler call
 	rr := httptest.NewRecorder()
+	h.DeleteLabel(rr, req)
 
-	// Call the storeLabel handler function with the mock dbHandler and mock HTTP request
-	handler := http.HandlerFunc(mockDB.storeLabel)
-	handler.ServeHTTP(rr, req)
-
-	// Check the status code returned by the handler
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
-
-	// Check if the response body contains the expected message
-	expectedResponse := `"message":"The label stored successfully."`
-	if rr.Body.String() != expectedResponse {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expectedResponse)
-	}
-}
-
-// Mock implementation of storeLabel function to satisfy the dbHandler interface
-func (db *dbHandler) storeLabel(w http.ResponseWriter, r *http.Request) {
-	data := make(map[string]string)
-	data["message"] = "The label stored successfully."
-	jsonResponse(w, data, http.StatusOK)
-}
-
-// Mock implementation of jsonResponse function for testing purposes
-func jsonResponse(w http.ResponseWriter, data map[string]string, statusCode int) {
-	w.WriteHeader(statusCode)
-	for key, value := range data {
-		w.Write([]byte(`"` + key + `":"` + value + `"`))
-	}
+	// Assert
+	require.Equal(t, http.StatusOK, rr.Code)
+	require.JSONEq(t, `{"data": {
+"message":"The label deleted successfully."
+},
+"status": "Success"
+}`, rr.Body.String())
+	require.NoError(t, mock.ExpectationsWereMet())
 }
