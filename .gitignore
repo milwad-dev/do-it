@@ -32,3 +32,6 @@ todo.txt
 # Logs
 logs/*.log
 internal/handlers/logs/*.log
+
+# Coverage
+internal/handlers/coverage
