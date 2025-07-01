@@ -1,58 +1,176 @@
 package handlers
 
 import (
-	"bytes"
+	"context"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi/v5"
+	"github.com/milwad-dev/do-it/internal/logger"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/require"
 )
 
-// Mock dbHandler struct to satisfy the dbHandler interface
-type dbHandler struct{}
+func TestGetLatestLabels_OK(t *testing.T) {
+	// Mock DB
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
 
-func TestStoreLabel(t *testing.T) {
-	// Create a mock dbHandler with any necessary dependencies
-	mockDB := &dbHandler{} // You may need to create a mock dbHandler
+	// Initialize logger in non-production mode for testing (prints JSON to stdout + file)
+	logger.InitLogger(false)
 
-	// Create a sample label JSON body
-	labelJSON := []byte(`{"title": "Test Label", "color": "#FF0000"}`)
+	// Expectations
+	mock.ExpectQuery(regexp.QuoteMeta(`
+	SELECT l.id, l.title, l.color, l.created_at, l.updated_at, l.user_id, 
+	       u.id, u.name, COALESCE(u.email, ''), COALESCE(u.phone, ''), u.created_at
+	FROM labels AS l
+	JOIN users AS u ON l.user_id = u.id
+	WHERE l.user_id = ?
+	ORDER BY l.created_at DESC
+`)).
+		WithArgs(float64(1)).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id", "title", "color", "created_at", "updated_at", "user_id",
+			"user_id", "name", "email", "phone", "user_created_at",
+		}).AddRow(
+			1, "Label Title", "#FF0000", "2025-01-01 10:00:00", "2025-01-02 10:00:00", 42,
+			42, "User Name", "user@example.com", "1234567890", "2024-12-31 09:00:00",
+		))
 
-	// Create a mock HTTP request with the sample label data
-	req, err := http.NewRequest("POST", "/labels", bytes.NewBuffer(labelJSON))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Handler
+	h := &DBHandler{DB: db}
 
-	// Create a ResponseRecorder to record the response
+	// Request setup
+	req := httptest.NewRequest(http.MethodGet, "/labels", nil)
+
+	// Add Chi route context with id param
+	req = callContext(req)
+
+	// Recorder & handler call
+	rr := httptest.NewRecorder()
+	h.GetLatestLabels(rr, req)
+
+	// Assert
+	require.Equal(t, http.StatusOK, rr.Code)
+	require.JSONEq(t, `{
+  "data": [
+    {
+      "id": 1,
+      "title": "Label Title",
+      "color": "#FF0000",
+      "created_at": "2025-01-01 10:00:00",
+      "updated_at": "2025-01-02 10:00:00",
+      "user": {
+        "id": 42,
+        "name": "User Name",
+        "email": "user@example.com",
+        "phone": "1234567890",
+        "emailVerified_at": "0001-01-01T00:00:00Z",
+        "phoneVerified_at": "0001-01-01T00:00:00Z",
+        "created_at": "2024-12-31 09:00:00",
+        "updated_at": ""
+      }
+    }
+  ],
+  "status": "Success"
+}`, rr.Body.String())
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestStoreLabel_OK(t *testing.T) {
+	// Setup mock DB
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	// Initialize logger if needed
+	logger.InitLogger(false)
+
+	// Prepare expected query and arguments
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO labels (title, color, user_id) VALUES (?, ?, ?)")).
+		WithArgs("Test Label", "#FF00FF", float64(1)).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// Setup DBHandler with mock DB
+	h := &DBHandler{DB: db}
+
+	// Create JSON request body
+	body := `{"title":"Test Label","color":"#FF00FF"}`
+
+	req := httptest.NewRequest(http.MethodPost, "/labels", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	// Add userID context (matching your GetUserIdFromContext)
+	req = callContext(req)
+
+	// Record response
 	rr := httptest.NewRecorder()
 
-	// Call the storeLabel handler function with the mock dbHandler and mock HTTP request
-	handler := http.HandlerFunc(mockDB.storeLabel)
-	handler.ServeHTTP(rr, req)
+	// Call handler
+	h.StoreLabel(rr, req)
 
-	// Check the status code returned by the handler
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
+	// Check response code
+	require.Equal(t, http.StatusOK, rr.Code)
 
-	// Check if the response body contains the expected message
-	expectedResponse := `"message":"The label stored successfully."`
-	if rr.Body.String() != expectedResponse {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expectedResponse)
-	}
+	// Check response body JSON
+	expected := `{"data":{"message":"The label store successfully."}, "status":"Success"}`
+	require.JSONEq(t, expected, rr.Body.String())
+
+	// Ensure all expectations were met
+	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-// Mock implementation of storeLabel function to satisfy the dbHandler interface
-func (db *dbHandler) storeLabel(w http.ResponseWriter, r *http.Request) {
-	data := make(map[string]string)
-	data["message"] = "The label stored successfully."
-	jsonResponse(w, data, http.StatusOK)
+func TestDeleteLabel_OK(t *testing.T) {
+	// Mock DB
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	// Expectations
+	mock.ExpectQuery(`SELECT count\(\*\) FROM labels WHERE id = \? AND user_id = \?`).
+		WithArgs("42", float64(1)).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+
+	mock.ExpectExec(`DELETE FROM labels WHERE id = \? AND user_id = \?`).
+		WithArgs("42", float64(1)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	// Handler
+	h := &DBHandler{DB: db}
+
+	// Request setup
+	req := httptest.NewRequest(http.MethodDelete, "/labels/42", nil)
+
+	// Add Chi route context with id param
+	req = callContext(req)
+
+	// Recorder & handler call
+	rr := httptest.NewRecorder()
+	h.DeleteLabel(rr, req)
+
+	// Assert
+	require.Equal(t, http.StatusOK, rr.Code)
+	require.JSONEq(t, `{"data": {
+"message":"The label deleted successfully."
+},
+"status": "Success"
+}`, rr.Body.String())
+	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-// Mock implementation of jsonResponse function for testing purposes
-func jsonResponse(w http.ResponseWriter, data map[string]string, statusCode int) {
-	w.WriteHeader(statusCode)
-	for key, value := range data {
-		w.Write([]byte(`"` + key + `":"` + value + `"`))
-	}
+func callContext(req *http.Request) *http.Request {
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("id", "42")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	// Add JWT claims to context
+	req = req.WithContext(context.WithValue(req.Context(), "userID", jwt.MapClaims{
+		"user_id": float64(1),
+	}))
+	return req
 }

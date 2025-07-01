@@ -29,5 +29,9 @@ go.work
 # Miscellaneous
 todo.txt
 
-# Logger
+# Logs
 logs/*.log
+internal/handlers/logs/*.log
+
+# Coverage
+internal/handlers/coverage

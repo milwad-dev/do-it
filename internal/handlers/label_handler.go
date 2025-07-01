@@ -27,11 +27,11 @@ func (db *DBHandler) GetLatestLabels(w http.ResponseWriter, r *http.Request) {
 
 	query := `
     SELECT l.id, l.title, l.color, l.created_at, l.updated_at, l.user_id, 
-           u.id, u.name, COALESCE(u.email, ''), COALESCE(u.phone, ''), u.created_at 
-    FROM labels l
-    JOIN users u ON l.user_id = u.id
-    ORDER BY l.created_at DESC
-    WHERE user_id = ?`
+           u.id, u.name, COALESCE(u.email, ''), COALESCE(u.phone, ''), u.created_at
+    FROM labels AS l
+    JOIN users AS u ON l.user_id = u.id
+    WHERE l.user_id = ?
+    ORDER BY l.created_at DESC`
 	rows, err := db.Query(query, userId)
 	if err != nil {
 		data["message"] = err.Error()
