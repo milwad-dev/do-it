@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
+	"github.com/milwad-dev/do-it/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -74,5 +77,55 @@ func TestGetLatestTasks_Success(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Errorf("Error: %s", rr.Body)
 		t.Errorf("expected 200, got %d", rr.Code)
+	}
+}
+
+func TestStoreTask_Success(t *testing.T) {
+	// Setup sqlmock
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open sqlmock database: %v", err)
+	}
+	defer db.Close()
+
+	handler := &DBHandler{DB: db}
+
+	// Prepare input task as JSON
+	task := models.Task{
+		Title:       "Test Task",
+		Description: "Test Description",
+		Status:      "pending",
+		LabelId:     1,
+	}
+	taskJSON, _ := json.Marshal(task)
+
+	// Create request
+	req := httptest.NewRequest(http.MethodPost, "/tasks", bytes.NewBuffer(taskJSON))
+	req.Header.Set("Content-Type", "application/json")
+
+	// Mock user id from context
+	req = callContext(req)
+
+	// Record response
+	w := httptest.NewRecorder()
+
+	// Mock the label exists query returning count = 1
+	mock.ExpectQuery("SELECT count\\(\\*\\) FROM labels WHERE id = \\? AND user_id = \\?").
+		WithArgs(task.LabelId, float64(1)).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+
+	// Mock the INSERT query
+	mock.ExpectExec("INSERT INTO tasks").
+		WithArgs(task.Title, task.Description, task.Status, task.LabelId, float64(1)).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// Call the function
+	handler.StoreTask(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status 200 OK but got %d", resp.StatusCode)
 	}
 }
