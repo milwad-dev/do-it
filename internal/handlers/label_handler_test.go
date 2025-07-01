@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -78,6 +79,49 @@ func TestGetLatestLabels_OK(t *testing.T) {
   ],
   "status": "Success"
 }`, rr.Body.String())
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestStoreLabel_OK(t *testing.T) {
+	// Setup mock DB
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	// Initialize logger if needed
+	logger.InitLogger(false)
+
+	// Prepare expected query and arguments
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO labels (title, color, user_id) VALUES (?, ?, ?)")).
+		WithArgs("Test Label", "#FF00FF", float64(1)).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// Setup DBHandler with mock DB
+	h := &DBHandler{DB: db}
+
+	// Create JSON request body
+	body := `{"title":"Test Label","color":"#FF00FF"}`
+
+	req := httptest.NewRequest(http.MethodPost, "/labels", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	// Add userID context (matching your GetUserIdFromContext)
+	req = callContext(req)
+
+	// Record response
+	rr := httptest.NewRecorder()
+
+	// Call handler
+	h.StoreLabel(rr, req)
+
+	// Check response code
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	// Check response body JSON
+	expected := `{"data":{"message":"The label store successfully."}, "status":"Success"}`
+	require.JSONEq(t, expected, rr.Body.String())
+
+	// Ensure all expectations were met
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
