@@ -7,6 +7,7 @@ import (
 	"github.com/milwad-dev/do-it/internal/logger"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -23,12 +24,14 @@ func TestGetLatestLabels_OK(t *testing.T) {
 	logger.InitLogger(false)
 
 	// Expectations
-	mock.ExpectQuery(`SELECT l\.id, l\.title, l\.color, l\.created_at, l\.updated_at, l\.user_id, 
-\s*u\.id, u\.name, COALESCE\(u\.email, ''\), COALESCE\(u\.phone, ''\), u\.created_at 
-\s*FROM labels l
-\s*JOIN users u ON l\.user_id = u\.id
-\s*WHERE l\.user_id = \?
-\s*ORDER BY l\.created_at DESC`).
+	mock.ExpectQuery(regexp.QuoteMeta(`
+	SELECT l.id, l.title, l.color, l.created_at, l.updated_at, l.user_id, 
+	       u.id, u.name, COALESCE(u.email, ''), COALESCE(u.phone, ''), u.created_at
+	FROM labels AS l
+	JOIN users AS u ON l.user_id = u.id
+	WHERE l.user_id = ?
+	ORDER BY l.created_at DESC
+`)).
 		WithArgs(float64(1)).
 		WillReturnRows(sqlmock.NewRows([]string{
 			"id", "title", "color", "created_at", "updated_at", "user_id",
@@ -53,24 +56,27 @@ func TestGetLatestLabels_OK(t *testing.T) {
 
 	// Assert
 	require.Equal(t, http.StatusOK, rr.Code)
-	require.JSONEq(t, `{"data":{
-{
-"color":"#FF0000",
-"created_at":"2025-01-01 10:00:00",
-"id":1,
-"title":"Label Title",
-"updated_at":"2025-01-02 10:00:00", 
-"user":{
-"created_at":"2024-12-31 09:00:00",
-"email":"user@example.com",
-"emailVerified_at":"0001-01-01T00:00:00Z",
-"id":42,
-"name":"User Name",
-"phone":"1234567890",
-"phoneVerified_at":"0001-01-01T00:00:00Z",
-"updated_at":""}
-}},
-"status": "Success"
+	require.JSONEq(t, `{
+  "data": [
+    {
+      "id": 1,
+      "title": "Label Title",
+      "color": "#FF0000",
+      "created_at": "2025-01-01 10:00:00",
+      "updated_at": "2025-01-02 10:00:00",
+      "user": {
+        "id": 42,
+        "name": "User Name",
+        "email": "user@example.com",
+        "phone": "1234567890",
+        "emailVerified_at": "0001-01-01T00:00:00Z",
+        "phoneVerified_at": "0001-01-01T00:00:00Z",
+        "created_at": "2024-12-31 09:00:00",
+        "updated_at": ""
+      }
+    }
+  ],
+  "status": "Success"
 }`, rr.Body.String())
 	require.NoError(t, mock.ExpectationsWereMet())
 }
