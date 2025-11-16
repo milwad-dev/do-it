@@ -35,4 +35,4 @@ RUN chmod +x wait-for-db.sh
 EXPOSE 8000
 
 # Run build
-CMD ["./wait-for-db.sh", "./app"]
+CMD ./wait-for-db.sh ./app
